@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hrms_app/core/constants/app_colors.dart';
 import 'package:hrms_app/features/dashboard/controllers/employee_dashboard_controlller.dart';
+import 'package:hrms_app/features/leave_management/screens/leave_screen.dart';
 import 'package:hrms_app/features/profile/screens/view_profile.dart';
 import 'package:hrms_app/features/settings/screens/settings_screen.dart';
 
@@ -82,16 +83,16 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Hello, ${employee.name} 👋',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Colors.black87),
-              ),
+              // Text(
+              //   'Hello, ${employee.name} 👋',
+              //   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Colors.black87),
+              // ),
               const SizedBox(height: 16),
               Expanded(
                 child: GridView.count(
                   crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
                   children: const [
                     _DashboardCard(title: 'My Profile', icon: Icons.person_outline, color: Colors.indigo),
                     _DashboardCard(title: 'Job Info', icon: Icons.work_outline, color: Colors.deepPurple),
@@ -130,29 +131,55 @@ class _DashboardCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        if (title == 'My Profile') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const ProfileScreen()),
-          );
-        }
-
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: color.shade50,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 32, color: color.shade700),
-            const SizedBox(height: 12),
-            Text(title, textAlign: TextAlign.center, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: color.shade700)),
-          ],
+    return Material(
+      elevation: 4,
+      borderRadius: BorderRadius.circular(16),
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          if (title == 'My Profile') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ProfileScreen()),
+            );
+          }
+          if (title == 'Leave Management') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const LeaveScreen()),
+            );
+          }
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            color: color.shade50,
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 36, color: color.shade700),
+              const SizedBox(height: 14),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: color.shade800,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

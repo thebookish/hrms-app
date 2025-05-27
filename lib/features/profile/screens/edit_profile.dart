@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hrms_app/core/constants/app_colors.dart';
 import 'package:hrms_app/core/services/employee_services.dart';
 import 'package:hrms_app/features/dashboard/controllers/employee_dashboard_controlller.dart';
@@ -17,6 +20,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late TextEditingController _positionController;
   late TextEditingController _departmentController;
   bool _isLoading = false;
+  File? _selectedImage;
 
   @override
   void dispose() {
@@ -25,6 +29,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _positionController.dispose();
     _departmentController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        _selectedImage = File(picked.path);
+      });
+    }
   }
 
   @override
@@ -45,9 +58,43 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             title: const Text('Edit Profile'),
             backgroundColor: AppColors.primary,
           ),
-          body: Padding(
+          body: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(children: [
+              Center(
+                child: Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundColor: AppColors.primary,
+                      backgroundImage: _selectedImage != null
+                          ? FileImage(_selectedImage!)
+                          : (employee.profilePic != null &&
+                          employee.profilePic!.isNotEmpty)
+                          ? NetworkImage(employee.profilePic!)
+                          : null,
+                      child: (_selectedImage == null &&
+                          (employee.profilePic == null ||
+                              employee.profilePic!.isEmpty))
+                          ? const Icon(Icons.person, size: 40, color: Colors.white)
+                          : null,
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: _pickImage,
+                        child: const CircleAvatar(
+                          radius: 16,
+                          backgroundColor: Colors.white,
+                          child: Icon(Icons.edit, size: 18, color: Colors.indigo),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
               _buildField('Name', _nameController),
               _buildField('Phone', _phoneController),
               _buildField('Position', _positionController),
@@ -57,7 +104,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 onPressed: _isLoading ? null : () async {
                   setState(() => _isLoading = true);
                   try {
-                    final updated = await EmployeeService().updateEmployeeProfile(
+                    // 1. Update profile fields
+                    await EmployeeService().updateEmployeeProfile(
                       email: employee.email,
                       updates: {
                         'name': _nameController.text.trim(),
@@ -66,12 +114,23 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         'department': _departmentController.text.trim(),
                       },
                     );
+
+                    // 2. Upload profile picture if selected
+                    if (_selectedImage != null) {
+                      final prefs = await SharedPreferences.getInstance();
+                      final token = prefs.getString('auth_token');
+                      if (token != null) {
+                        await EmployeeService().uploadProfilePic(email: employee.email, _selectedImage!, token);
+                      }
+                    }
+
                     if (mounted) {
-                      ref.invalidate(employeeProvider); // Refresh provider
-                      Navigator.pop(context); // Return to profile screen
+                      ref.invalidate(employeeProvider); // refresh dashboard/profile
+                      Navigator.pop(context);
                     }
                   } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text('Error: $e')));
                   } finally {
                     setState(() => _isLoading = false);
                   }
@@ -79,7 +138,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
                     : const Text('Save Changes'),
-              )
+              ),
             ]),
           ),
         );

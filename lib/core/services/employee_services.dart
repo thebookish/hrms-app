@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:hrms_app/core/services/auth_service.dart';
 import 'package:http/http.dart' as http;
 import '../constants/api_endpoints.dart';
@@ -36,6 +37,19 @@ class EmployeeService {
     } else {
       throw Exception('Failed to update profile');
 
+    }
+  }
+  Future<void> uploadProfilePic(File imageFile, String token, {required String email}) async {
+    var request = http.MultipartRequest(
+      'PUT',
+      Uri.parse('${ApiEndpoints.baseUrl}/users/update-profile-pic?email=$email'),
+    );
+    request.headers['Authorization'] = 'Bearer $token';
+    request.files.add(await http.MultipartFile.fromPath('profilePic', imageFile.path));
+
+    var response = await request.send();
+    if (response.statusCode != 200) {
+      throw Exception('Failed to upload profile picture');
     }
   }
 

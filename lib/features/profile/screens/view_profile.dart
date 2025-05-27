@@ -34,14 +34,21 @@ class ProfileScreen extends ConsumerWidget {
         data: (employee) => ListView(
           padding: const EdgeInsets.all(16),
           children: [
+
             CircleAvatar(
               radius: 50,
               backgroundColor: AppColors.primary,
-              child: Text(
-                employee.name.substring(0, 1),
+              backgroundImage: (employee.profilePic != null && employee.profilePic!.isNotEmpty)
+                  ? NetworkImage(employee.profilePic!)
+                  : null,
+              child: (employee.profilePic == null || employee.profilePic!.isEmpty)
+                  ? Text(
+                employee.name.isNotEmpty ? employee.name[0].toUpperCase() : '?',
                 style: const TextStyle(fontSize: 32, color: Colors.white),
-              ),
+              )
+                  : null,
             ),
+
             const SizedBox(height: 16),
             Center(
               child: Text(
