@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hrms_app/core/constants/app_colors.dart';
 import 'package:hrms_app/features/dashboard/controllers/employee_dashboard_controlller.dart';
+import 'package:hrms_app/features/job_info/screens/job_info_screen.dart';
 import 'package:hrms_app/features/leave_management/screens/leave_screen.dart';
 import 'package:hrms_app/features/profile/screens/view_profile.dart';
+import 'package:hrms_app/features/salary/screens/salary_info_screen.dart';
 import 'package:hrms_app/features/settings/screens/settings_screen.dart';
 
 class EmployeeDashboard extends ConsumerStatefulWidget {
@@ -18,12 +20,6 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
 
   void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);
-    if (index == 2) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const SettingsScreen()),
-      );
-    }
   }
 
   void _showNotificationsModal(BuildContext context, List<String> notifications) {
@@ -79,14 +75,14 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
           ],
         ),
         body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
+      padding: const EdgeInsets.all(16.0),
+      child: IndexedStack(
+        index: _selectedIndex,
+        children: [
+          // Index 0 — Dashboard cards
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Text(
-              //   'Hello, ${employee.name} 👋',
-              //   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Colors.black87),
-              // ),
               const SizedBox(height: 16),
               Expanded(
                 child: GridView.count(
@@ -105,17 +101,55 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
               ),
             ],
           ),
+
+          // Index 1 — Placeholder for Profile or Alerts
+          // const ProfileScreen()
+        ],
+      ),
+    ),
+
+    floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            );
+          },
+          shape: const CircleBorder(),
+          backgroundColor: Colors.white,
+          elevation: 10,
+          child: const Icon(Icons.settings, size: 35,color: Colors.indigo,),
+
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.dashboard_outlined), label: 'Dashboard'),
-            BottomNavigationBarItem(icon: Icon(Icons.notifications_outlined), label: 'Alerts'),
-            BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: 'Settings'),
-          ],
-          currentIndex: _selectedIndex,
-          selectedItemColor: AppColors.primary,
-          unselectedItemColor: Colors.grey,
-          onTap: _onItemTapped,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        bottomNavigationBar: BottomAppBar(
+          shape: const CircularNotchedRectangle(),
+          notchMargin: 15.0,
+          color: Colors.indigo,
+          elevation: 10,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.dashboard_outlined,size: 30,
+                      color: _selectedIndex == 0 ? AppColors.accent : Colors.white),
+                  onPressed: () => {
+                    _onItemTapped(0),
+                 }
+                ),
+                IconButton(
+                  icon: Icon(Icons.person,size: 30,
+                      color: _selectedIndex == 1 ? AppColors.accent : Colors.white),
+                  onPressed: () => {
+                    _onItemTapped(1),
+                    }
+                ),
+
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -148,6 +182,18 @@ class _DashboardCard extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const LeaveScreen()),
+            );
+          }
+          if (title == 'Job Info') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const JobInfoScreen()),
+            );
+          }
+          if (title == 'Salary & Bank Info') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SalaryInfoScreen()),
             );
           }
         },
