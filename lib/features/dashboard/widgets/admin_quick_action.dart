@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hrms_app/core/constants/app_colors.dart';
+import 'package:hrms_app/features/leave_management/screens/leave_management_screen.dart';
+// Import other target screens as needed
 
 class AdminQuickActionsSection extends StatefulWidget {
   const AdminQuickActionsSection({super.key});
@@ -11,14 +13,60 @@ class AdminQuickActionsSection extends StatefulWidget {
 class _AdminQuickActionsSectionState extends State<AdminQuickActionsSection> {
   bool isPendingSelected = true;
 
-  final List<_AdminActionItem> items = [
-    _AdminActionItem(title: 'Leave\nManagement', icon: Icons.beach_access),
-    _AdminActionItem(title: 'Task\nManagement', icon: Icons.task),
-    _AdminActionItem(title: 'Salary\nManagement', icon: Icons.attach_money),
-    _AdminActionItem(title: 'Reports', icon: Icons.bar_chart),
-    _AdminActionItem(title: 'Notifications', icon: Icons.notification_important_sharp),
-    _AdminActionItem(title: 'Sponsors', icon: Icons.handshake),
-  ];
+  late final List<_AdminActionItem> items;
+
+  @override
+  void initState() {
+    super.initState();
+
+    items = [
+      _AdminActionItem(
+        title: 'Leave\nManagement',
+        icon: Icons.beach_access,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AdminLeaveManagementScreen()),
+          );
+        },
+      ),
+      _AdminActionItem(
+        title: 'Task\nManagement',
+        icon: Icons.task,
+        onTap: () {
+          // TODO: Navigate to Task Management Screen
+        },
+      ),
+      _AdminActionItem(
+        title: 'Salary\nManagement',
+        icon: Icons.attach_money,
+        onTap: () {
+          // TODO: Navigate to Salary Management Screen
+        },
+      ),
+      _AdminActionItem(
+        title: 'Reports',
+        icon: Icons.bar_chart,
+        onTap: () {
+          // TODO: Navigate to Reports Screen
+        },
+      ),
+      _AdminActionItem(
+        title: 'Notifications',
+        icon: Icons.notification_important_sharp,
+        onTap: () {
+          // TODO: Navigate to Notifications Screen
+        },
+      ),
+      _AdminActionItem(
+        title: 'Sponsors',
+        icon: Icons.handshake,
+        onTap: () {
+          // TODO: Navigate to Sponsor Management Screen
+        },
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,13 +83,14 @@ class _AdminQuickActionsSectionState extends State<AdminQuickActionsSection> {
               return _QuickBox(
                 icon: item.icon,
                 label: item.title,
+                onTap: item.onTap,
               );
             }).toList(),
           ),
         ),
         const SizedBox(height: 24),
 
-        // Toggle Bar (like "Bekleyen Taleplerim / Geçmiş Taleplerim")
+        // Toggle Bar
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
           height: 40,
@@ -72,31 +121,35 @@ class _AdminQuickActionsSectionState extends State<AdminQuickActionsSection> {
 class _QuickBox extends StatelessWidget {
   final IconData icon;
   final String label;
+  final VoidCallback onTap;
 
-  const _QuickBox({required this.icon, required this.label});
+  const _QuickBox({required this.icon, required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 90,
-      child: Column(
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: AppColors.brandColor.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(20),
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: 90,
+        child: Column(
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: AppColors.brandColor.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(icon, color: AppColors.brandColor, size: 30),
             ),
-            child: Icon(icon, color: AppColors.brandColor, size: 30),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -141,6 +194,11 @@ class _ToggleTab extends StatelessWidget {
 class _AdminActionItem {
   final String title;
   final IconData icon;
+  final VoidCallback onTap;
 
-  _AdminActionItem({required this.title, required this.icon});
+  _AdminActionItem({
+    required this.title,
+    required this.icon,
+    required this.onTap,
+  });
 }

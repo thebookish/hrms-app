@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:hrms_app/core/models/employee_model_new.dart';
 import 'package:hrms_app/core/services/auth_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,6 +16,28 @@ class EmployeeService {
     if (response.statusCode == 200) {
       return EmployeeModel.fromJson(jsonDecode(response.body));
     } else {
+      throw Exception('Failed to load employee data');
+    }
+  }
+
+  Future<EmployeeModelNew> getEmployeeDataByEmail(String email) async {
+
+    final token = await AuthService().getToken();
+    // print('staaaat: '+email);
+    final response = await http.get(
+
+      Uri.parse('${ApiEndpoints.baseUrl}/employees/emp-data/?email=$email'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+
+    );
+    print('staaaat: '+response.statusCode.toString());
+    if (response.statusCode == 200) {
+      return EmployeeModelNew.fromJson(jsonDecode(response.body));
+    } else {
+      print('staaaat: '+response.statusCode.toString());
       throw Exception('Failed to load employee data');
     }
   }
@@ -91,5 +114,24 @@ class EmployeeService {
       throw Exception('Failed to approve employee');
     }
   }
+
+  Future<void> updateEmployee(EmployeeModelNew employee) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+
+    final response = await http.put(
+      Uri.parse('${ApiEndpoints.baseUrl}/employees/edit/?email=${employee.email}'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(employee.toJson()),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update employee');
+    }
+  }
+
 
 }

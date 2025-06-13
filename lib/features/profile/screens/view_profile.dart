@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hrms_app/features/dashboard/controllers/employee_dashboard_controlller.dart';
 import 'package:hrms_app/features/employee_management/screens/verify_employee_screen.dart';
+import 'package:hrms_app/features/profile/controllers/employee_status_provider.dart';
 import 'package:hrms_app/features/profile/screens/edit_profile.dart';
 import '../../../core/constants/app_colors.dart';
 
@@ -21,6 +22,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final employeeAsync = ref.watch(employeeProvider);
+    final employeeStatus = ref.watch(currentEmployeeStatusProvider);
+
 
     return Scaffold(
       body: RefreshIndicator(
@@ -57,6 +60,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 12),
               Center(
                 child: Column(
@@ -71,6 +75,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ],
                 ),
               ),
+              const SizedBox(height: 8),
+              Chip(
+                label: Text(employeeStatus.toUpperCase()),
+                backgroundColor: _statusColor(employeeStatus),
+                labelStyle: const TextStyle(color: Colors.white),
+              ),
               const SizedBox(height: 20),
               const Divider(),
               _sectionItem(context, icon: Icons.call, title: "Mobile", description: employee.phone.isNotEmpty ? employee.phone : "No number provided."),
@@ -79,7 +89,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               _sectionItem(context, icon: Icons.group_work, title: "Department", description: employee.department.isNotEmpty ? employee.department : "Not specified."),
 
               const SizedBox(height: 16),
-              Center(
+              employeeStatus.toLowerCase() != 'pending' && employeeStatus.toLowerCase() != 'approved'
+                  ? Center(
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.verified_user_outlined),
                   label: const Text("Verify as Employee"),
@@ -95,6 +106,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   },
                 ),
               )
+                  : const SizedBox.shrink()
+
             ],
           ),
         ),
@@ -133,5 +146,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ],
       ),
     );
+  }
+}
+Color _statusColor(String status) {
+  switch (status.toLowerCase()) {
+    case 'approved':
+      return Colors.green;
+    case 'pending':
+      return Colors.orange;
+    case 'declined':
+      return Colors.red;
+    default:
+      return Colors.grey;
   }
 }

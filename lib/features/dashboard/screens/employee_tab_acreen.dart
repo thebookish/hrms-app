@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hrms_app/core/constants/app_colors.dart';
 import 'package:hrms_app/features/dashboard/controllers/admin_provider.dart';
+import 'package:hrms_app/features/employee_management/screens/edit_employee_screen.dart';
 import 'package:hrms_app/features/employee_management/screens/pending_employee_details_screen.dart';
 
 class EmployeeTabScreen extends ConsumerStatefulWidget {
@@ -241,7 +242,12 @@ class _EmployeeTabScreenState extends ConsumerState<EmployeeTabScreen> {
                     alignment: Alignment.bottomRight,
                     child: TextButton(
                       onPressed: () {
-                        // TODO: Navigate to edit screen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => EditEmployeeScreen(employee: emp),
+                          ),
+                        );
                       },
                       child: const Text("EDIT", style: TextStyle(fontWeight: FontWeight.w500, color: AppColors.brandColor)),
                     ),

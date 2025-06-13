@@ -8,3 +8,6 @@ final leaveListProvider = FutureProvider<List<LeaveModel>>((ref) {
   if (user == null) throw Exception('User not logged in');
   return LeaveService().fetchLeaves(email: user.email); // ✅ required call
 });
+final leaveRequestsProvider = FutureProvider.autoDispose((ref) async {
+  return LeaveService().fetchAllLeaves();
+});

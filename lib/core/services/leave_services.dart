@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class LeaveService {
   Future<List<LeaveModel>> fetchLeaves( {required String email}) async {
-    print('statttttus:  ');
+    // print('statttttus:  ');
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
 
@@ -16,12 +16,12 @@ class LeaveService {
         'Authorization': 'Bearer $token',
       },
     );
-print('statttttus:  '+response.statusCode.toString());
+// print('statttttus:  '+response.statusCode.toString());
     if (response.statusCode == 200) {
       final List decoded = json.decode(response.body);
       return decoded.map((e) => LeaveModel.fromJson(e)).toList();
     } else {
-      print('statttttus:  '+response.statusCode.toString());
+      // print('statttttus:  '+response.statusCode.toString());
       throw Exception('Failed to fetch leaves');
     }
   }
@@ -42,6 +42,25 @@ print('statttttus:  '+response.statusCode.toString());
     if (response.statusCode != 201) {
       print('statussss: '+response.statusCode.toString());
       throw Exception('Leave application failed');
+    }
+  }
+
+  Future<List<LeaveModel>> fetchAllLeaves() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+
+    final response = await http.get(
+      Uri.parse('${ApiEndpoints.baseUrl}/leaves'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List decoded = jsonDecode(response.body);
+      return decoded.map((e) => LeaveModel.fromJson(e)).toList();
+    } else {
+      throw Exception('Failed to fetch leave requests');
     }
   }
 }

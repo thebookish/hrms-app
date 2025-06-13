@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hrms_app/core/constants/app_colors.dart';
+import 'package:hrms_app/core/services/employee_services.dart';
 import 'package:hrms_app/core/services/leave_services.dart';
 import 'package:hrms_app/features/auth/controllers/user_provider.dart';
+import 'package:hrms_app/features/dashboard/controllers/employee_dashboard_controlller.dart';
 import 'package:hrms_app/features/leave_management/models/leave_model.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
@@ -13,7 +15,8 @@ class LeaveScreen extends ConsumerStatefulWidget {
   ConsumerState<LeaveScreen> createState() => _LeaveScreenState();
 }
 
-class _LeaveScreenState extends ConsumerState<LeaveScreen> with TickerProviderStateMixin {
+class _LeaveScreenState extends ConsumerState<LeaveScreen>
+    with TickerProviderStateMixin {
   List<LeaveModel> _leaves = [];
   bool _isLoading = true;
   String? _error;
@@ -24,6 +27,7 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen> with TickerProviderSt
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _loadLeaves();
+    EmployeeService().getEmployeeDataByEmail(ref.read(loggedInUserProvider)!.email);
   }
 
   Future<void> _loadLeaves() async {
@@ -45,6 +49,8 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen> with TickerProviderSt
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(loggedInUserProvider);
+    final employeeAsync = ref.watch(employeeDataProvider);
+
     return Scaffold(
       backgroundColor: const Color(0xFF0E1D36),
       appBar: AppBar(
@@ -53,83 +59,118 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen> with TickerProviderSt
         title: const Text('Leaves Status', style: TextStyle(fontSize: 20)),
         centerTitle: true,
         actions: const [
-          CircleAvatar(radius: 18, backgroundImage: AssetImage('assets/user.png')),
+          // CircleAvatar(radius: 18, backgroundImage: AssetImage('assets/user.png')),
           SizedBox(width: 12),
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : _error != null
-          ? Center(child: Text('Error: $_error', style: const TextStyle(color: Colors.white)))
-          : Column(
-        children: [
-          const SizedBox(height: 8),
-          CircularPercentIndicator(
-            radius: 60,
-            lineWidth: 12,
-            animation: true,
-            percent: 0.5,
-            center: const Text("12\nBalance", textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            circularStrokeCap: CircularStrokeCap.round,
-            backgroundColor: Colors.grey.shade800,
-            progressColor: Colors.greenAccent,
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildStatBox("22", "Total Leaves", Colors.blue),
-              _buildStatBox("12", "Leave Balance", Colors.green),
-              _buildStatBox("10", "Leaves Utilized", Colors.amber),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildLeaveTypeCircle("2", "Casual"),
-              _buildLeaveTypeCircle("3", "Medical"),
-              _buildLeaveTypeCircle("5", "Annual"),
-              _buildLeaveTypeCircle("2", "Parental"),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            child: Column(
-              children: [
-                TabBar(
-                  controller: _tabController,
-                  indicatorColor: AppColors.primary,
-                  labelColor: AppColors.primary,
-                  unselectedLabelColor: Colors.grey,
-                  tabs: const [
-                    Tab(text: "Approvals"),
-                    Tab(text: "Leave History"),
-                  ],
+              ? Center(
+                  child: Text('Error: $_error',
+                      style: const TextStyle(color: Colors.white)))
+              : employeeAsync.when(
+                  loading: () => const Center(
+                      child: CircularProgressIndicator(color: Colors.white)),
+                  error: (err, _) => Center(
+                      child: Text('Error: $err',
+                          style: const TextStyle(color: Colors.white))),
+                  data: (employee) {
+                    final sick = employee.sickLeave ?? 0;
+                    final casual = employee.casualLeave ?? 0;
+                    final paid = employee.paidLeave ?? 0;
+
+                    final total = sick + casual + paid;
+                    final used = _leaves.length;
+                    final balance = total - used;
+
+                    return Column(
+                      children: [
+                        const SizedBox(height: 8),
+                        CircularPercentIndicator(
+                          radius: 60,
+                          lineWidth: 12,
+                          animation: true,
+                          percent: total == 0
+                              ? 0
+                              : (balance / total).clamp(0.0, 1.0),
+                          center: Text("$balance\nBalance",
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold)),
+                          circularStrokeCap: CircularStrokeCap.round,
+                          backgroundColor: Colors.grey.shade800,
+                          progressColor: Colors.greenAccent,
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _buildStatBox(
+                                "$total", "Total Leaves", Colors.blue),
+                            _buildStatBox(
+                                "$balance", "Leave Balance", Colors.green),
+                            _buildStatBox(
+                                "$used", "Leaves Utilized", Colors.amber),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildLeaveTypeCircle("$casual", "Casual"),
+                            _buildLeaveTypeCircle("$sick", "Sick"),
+                            _buildLeaveTypeCircle("$paid", "Paid"),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            borderRadius:
+                                BorderRadius.vertical(top: Radius.circular(20)),
+                          ),
+                          child: Column(
+                            children: [
+                              TabBar(
+                                controller: _tabController,
+                                indicatorColor: AppColors.primary,
+                                labelColor: AppColors.primary,
+                                unselectedLabelColor: Colors.grey,
+                                tabs: const [
+                                  Tab(text: "Approvals"),
+                                  Tab(text: "Leave History"),
+                                ],
+                              ),
+                              SizedBox(
+                                height: 300,
+                                child: TabBarView(
+                                  controller: _tabController,
+                                  children: [
+                                    _buildLeaveList(context,
+                                        statusFilter: 'pending'),
+                                    _buildLeaveList(context),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
-                SizedBox(
-                  height: 300,
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildLeaveList(context, statusFilter: 'pending'),
-                      _buildLeaveList(context),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add, color: Colors.white,),
-        label: const Text("Apply Leave", style: TextStyle(color: Colors.white),),
+        icon: const Icon(
+          Icons.add,
+          color: Colors.white,
+        ),
+        label: const Text(
+          "Apply Leave",
+          style: TextStyle(color: Colors.white),
+        ),
         onPressed: () => _showLeaveForm(context, user!.email),
       ),
     );
@@ -144,10 +185,15 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen> with TickerProviderSt
             color: color,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Text(count, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+          child: Text(count,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold)),
         ),
         const SizedBox(height: 4),
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+        Text(label,
+            style: const TextStyle(color: Colors.white70, fontSize: 12)),
       ],
     );
   }
@@ -165,7 +211,9 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen> with TickerProviderSt
               border: Border.all(color: Colors.blueAccent, width: 2),
               shape: BoxShape.circle,
             ),
-            child: Center(child: Text(count, style: const TextStyle(color: Colors.white))),
+            child: Center(
+                child:
+                    Text(count, style: const TextStyle(color: Colors.white))),
           ),
         ),
         const SizedBox(height: 6),
@@ -180,7 +228,9 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen> with TickerProviderSt
         : _leaves.where((l) => l.status.toLowerCase() == statusFilter).toList();
 
     if (filtered.isEmpty) {
-      return const Center(child: Text("No records found", style: TextStyle(color: Colors.grey)));
+      return const Center(
+          child:
+              Text("No records found", style: TextStyle(color: Colors.grey)));
     }
 
     return ListView.builder(
@@ -206,7 +256,10 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen> with TickerProviderSt
                 color: _statusColor(leave.status).withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(leave.status, style: TextStyle(color: _statusColor(leave.status), fontWeight: FontWeight.bold)),
+              child: Text(leave.status,
+                  style: TextStyle(
+                      color: _statusColor(leave.status),
+                      fontWeight: FontWeight.bold)),
             ),
           ),
         );
@@ -224,7 +277,6 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen> with TickerProviderSt
         return Colors.orange;
     }
   }
-
 
   void _showLeaveForm(BuildContext context, String email) {
     final typeController = TextEditingController();
@@ -255,7 +307,8 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen> with TickerProviderSt
                   children: [
                     const Text(
                       'Apply for Leave',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 20),
                     TextField(
@@ -263,7 +316,8 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen> with TickerProviderSt
                       decoration: const InputDecoration(
                         labelText: 'Leave Type',
                         border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -272,7 +326,8 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen> with TickerProviderSt
                       decoration: const InputDecoration(
                         labelText: 'Reason',
                         border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -293,7 +348,8 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen> with TickerProviderSt
                               context: context,
                               initialDate: DateTime.now(),
                               firstDate: DateTime.now(),
-                              lastDate: DateTime.now().add(const Duration(days: 365)),
+                              lastDate:
+                                  DateTime.now().add(const Duration(days: 365)),
                             );
                             if (picked != null) {
                               setState(() => fromDate = picked);
@@ -321,7 +377,8 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen> with TickerProviderSt
                               context: context,
                               initialDate: fromDate ?? DateTime.now(),
                               firstDate: fromDate ?? DateTime.now(),
-                              lastDate: DateTime.now().add(const Duration(days: 365)),
+                              lastDate:
+                                  DateTime.now().add(const Duration(days: 365)),
                             );
                             if (picked != null) {
                               setState(() => toDate = picked);
@@ -343,7 +400,8 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen> with TickerProviderSt
                             fromDate == null ||
                             toDate == null) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('All fields are required')),
+                            const SnackBar(
+                                content: Text('All fields are required')),
                           );
                           return;
                         }
