@@ -35,6 +35,10 @@ dependencies:
   shared_preferences:
   image_picker:
   fl_chart: ^0.63.0
+  percent_indicator:
+  file_picker:
+  charts_flutter: ^0.11.0
+  flutter_secure_storage:
   intl:
   http:
 

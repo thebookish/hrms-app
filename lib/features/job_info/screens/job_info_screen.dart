@@ -98,7 +98,7 @@ class _JobInfoScreenState extends ConsumerState<JobInfoScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Job Information'),
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.brandColor,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -127,12 +127,13 @@ class _JobInfoScreenState extends ConsumerState<JobInfoScreen> {
   Widget _sectionTitle(String text) {
     return Text(
       text,
-      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.brandColor),
     );
   }
 
   Widget _infoCard(List<Widget> children) {
     return Card(
+      color: AppColors.white,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Column(children: children),
@@ -141,7 +142,7 @@ class _JobInfoScreenState extends ConsumerState<JobInfoScreen> {
 
   Widget _buildInfoTile(IconData icon, String label, String value) {
     return ListTile(
-      leading: Icon(icon, color: AppColors.primary),
+      leading: Icon(icon, color: AppColors.brandColor),
       title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
       subtitle: Text(value, style: const TextStyle(fontSize: 15)),
     );
@@ -150,6 +151,7 @@ class _JobInfoScreenState extends ConsumerState<JobInfoScreen> {
   Widget _historyCard(List<String> history) {
     return Card(
       elevation: 2,
+      color: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
@@ -187,6 +189,7 @@ class _JobInfoScreenState extends ConsumerState<JobInfoScreen> {
         }
 
         return Card(
+          color: AppColors.white,
           elevation: 2,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           margin: const EdgeInsets.symmetric(vertical: 8),
@@ -253,12 +256,13 @@ class _JobInfoScreenState extends ConsumerState<JobInfoScreen> {
                 const SizedBox(height: 12),
                 LinearProgressIndicator(
                   value: task.isCompleted ? 1.0 : 0.5,
-                  color: AppColors.primary,
+                  color: AppColors.brandColor,
                   backgroundColor: Colors.grey[300],
                 ),
                 Row(
                   children: [
                     Checkbox(
+                      activeColor: AppColors.brandColor,
                       value: task.isCompleted,
                       onChanged: (_) => _toggleTaskCompletion(task.id),
                     ),

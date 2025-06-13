@@ -4,6 +4,7 @@ import 'package:hrms_app/core/constants/app_colors.dart';
 import 'package:hrms_app/core/services/leave_services.dart';
 import 'package:hrms_app/features/auth/controllers/user_provider.dart';
 import 'package:hrms_app/features/leave_management/models/leave_model.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
 
 class LeaveScreen extends ConsumerStatefulWidget {
   const LeaveScreen({super.key});
@@ -12,14 +13,16 @@ class LeaveScreen extends ConsumerStatefulWidget {
   ConsumerState<LeaveScreen> createState() => _LeaveScreenState();
 }
 
-class _LeaveScreenState extends ConsumerState<LeaveScreen> {
+class _LeaveScreenState extends ConsumerState<LeaveScreen> with TickerProviderStateMixin {
   List<LeaveModel> _leaves = [];
   bool _isLoading = true;
   String? _error;
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _loadLeaves();
   }
 
@@ -42,45 +45,172 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(loggedInUserProvider);
-
     return Scaffold(
+      backgroundColor: const Color(0xFF0E1D36),
       appBar: AppBar(
-        title: const Text('Leave Management'),
-        backgroundColor: AppColors.primary,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              _showLeaveForm(context, user!.email);
-            },
-          )
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text('Leaves Status', style: TextStyle(fontSize: 20)),
+        centerTitle: true,
+        actions: const [
+          CircleAvatar(radius: 18, backgroundImage: AssetImage('assets/user.png')),
+          SizedBox(width: 12),
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : _error != null
-          ? Center(child: Text('Error: $_error'))
-          : _leaves.isEmpty
-          ? const Center(child: Text('No leave records found.'))
-          : ListView.builder(
-        itemCount: _leaves.length,
-        itemBuilder: (context, index) {
-          final leave = _leaves[index];
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            child: ListTile(
-              title: Text(
-                  '${leave.type} (${leave.fromDate.split('T')[0]} to ${leave.toDate.split('T')[0]})'),
-              subtitle: Text('Reason: ${leave.reason}'),
-              trailing: Chip(
-                label: Text(leave.status),
-                backgroundColor: _statusColor(leave.status),
-                labelStyle: const TextStyle(color: Colors.white),
-              ),
+          ? Center(child: Text('Error: $_error', style: const TextStyle(color: Colors.white)))
+          : Column(
+        children: [
+          const SizedBox(height: 8),
+          CircularPercentIndicator(
+            radius: 60,
+            lineWidth: 12,
+            animation: true,
+            percent: 0.5,
+            center: const Text("12\nBalance", textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            circularStrokeCap: CircularStrokeCap.round,
+            backgroundColor: Colors.grey.shade800,
+            progressColor: Colors.greenAccent,
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildStatBox("22", "Total Leaves", Colors.blue),
+              _buildStatBox("12", "Leave Balance", Colors.green),
+              _buildStatBox("10", "Leaves Utilized", Colors.amber),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildLeaveTypeCircle("2", "Casual"),
+              _buildLeaveTypeCircle("3", "Medical"),
+              _buildLeaveTypeCircle("5", "Annual"),
+              _buildLeaveTypeCircle("2", "Parental"),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
-          );
-        },
+            child: Column(
+              children: [
+                TabBar(
+                  controller: _tabController,
+                  indicatorColor: AppColors.primary,
+                  labelColor: AppColors.primary,
+                  unselectedLabelColor: Colors.grey,
+                  tabs: const [
+                    Tab(text: "Approvals"),
+                    Tab(text: "Leave History"),
+                  ],
+                ),
+                SizedBox(
+                  height: 300,
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildLeaveList(context, statusFilter: 'pending'),
+                      _buildLeaveList(context),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.add, color: Colors.white,),
+        label: const Text("Apply Leave", style: TextStyle(color: Colors.white),),
+        onPressed: () => _showLeaveForm(context, user!.email),
+      ),
+    );
+  }
+
+  Widget _buildStatBox(String count, String label, Color color) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(count, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+        ),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+      ],
+    );
+  }
+
+  Widget _buildLeaveTypeCircle(String count, String type) {
+    return Column(
+      children: [
+        CircleAvatar(
+          backgroundColor: Colors.transparent,
+          radius: 24,
+          child: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.blueAccent, width: 2),
+              shape: BoxShape.circle,
+            ),
+            child: Center(child: Text(count, style: const TextStyle(color: Colors.white))),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(type, style: const TextStyle(color: Colors.white, fontSize: 13)),
+      ],
+    );
+  }
+
+  Widget _buildLeaveList(BuildContext context, {String? statusFilter}) {
+    final filtered = statusFilter == null
+        ? _leaves
+        : _leaves.where((l) => l.status.toLowerCase() == statusFilter).toList();
+
+    if (filtered.isEmpty) {
+      return const Center(child: Text("No records found", style: TextStyle(color: Colors.grey)));
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(12),
+      itemCount: filtered.length,
+      itemBuilder: (context, index) {
+        final leave = filtered[index];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: ListTile(
+            title: Text(
+              '${leave.type} Leave\n${leave.fromDate.split("T")[0]} - ${leave.toDate.split("T")[0]}',
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(leave.reason),
+            trailing: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: _statusColor(leave.status).withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(leave.status, style: TextStyle(color: _statusColor(leave.status), fontWeight: FontWeight.bold)),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -94,6 +224,7 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen> {
         return Colors.orange;
     }
   }
+
 
   void _showLeaveForm(BuildContext context, String email) {
     final typeController = TextEditingController();
@@ -153,6 +284,10 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen> {
                               : 'From: ${fromDate!.toIso8601String().split('T')[0]}'),
                         ),
                         ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.brandColor,
+                            // padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
                           onPressed: () async {
                             final picked = await showDatePicker(
                               context: context,
@@ -177,6 +312,10 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen> {
                               : 'To: ${toDate!.toIso8601String().split('T')[0]}'),
                         ),
                         ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.brandColor,
+                            // padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
                           onPressed: () async {
                             final picked = await showDatePicker(
                               context: context,
@@ -195,7 +334,7 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen> {
                     const SizedBox(height: 20),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: AppColors.brandColor,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                       onPressed: () async {

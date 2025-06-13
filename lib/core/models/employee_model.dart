@@ -6,6 +6,7 @@ class EmployeeModel {
   final String department;
   final String joinDate;
   final String profilePic;
+  final String status;
   final List<String> notifications;
 
   EmployeeModel({
@@ -16,6 +17,7 @@ class EmployeeModel {
     required this.department,
     required this.joinDate,
     required this.profilePic,
+    required this.status,
     required this.notifications,
   });
 
@@ -28,6 +30,7 @@ class EmployeeModel {
       department: json['department'] ?? '',
       joinDate: json['joinDate'] ?? '',
       profilePic: json['profilePic'] ?? '',
+      status: json['status']??'',
       notifications: List<String>.from(json['notifications'] ?? []),
     );
   }

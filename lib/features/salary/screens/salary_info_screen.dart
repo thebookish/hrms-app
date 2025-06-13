@@ -51,7 +51,7 @@ class _SalaryInfoScreenState extends State<SalaryInfoScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Salary Information'),
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.brandColor,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())

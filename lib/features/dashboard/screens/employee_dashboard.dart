@@ -66,7 +66,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
         appBar: AppBar(
           title: const Text('Employee Dashboard'),
           centerTitle: true,
-          backgroundColor: Colors.indigo,
+          backgroundColor: AppColors.brandColor,
           actions: [
             IconButton(
               icon: const Icon(Icons.notifications_none),
@@ -118,14 +118,14 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
           shape: const CircleBorder(),
           backgroundColor: Colors.white,
           elevation: 10,
-          child: const Icon(Icons.settings, size: 35,color: Colors.indigo,),
+          child: const Icon(Icons.settings, size: 35,color: AppColors.brandColor,),
 
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         bottomNavigationBar: BottomAppBar(
           shape: const CircularNotchedRectangle(),
           notchMargin: 15.0,
-          color: Colors.indigo,
+          color: AppColors.brandColor,
           elevation: 10,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -200,7 +200,7 @@ class _DashboardCard extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: color.shade50,
+            color: AppColors.white,
             boxShadow: const [
               BoxShadow(
                 color: Colors.black12,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 
 ThemeData lightTheme = ThemeData(
-  primarySwatch: AppColors.primary,
+  primarySwatch: AppColors.brandBase,
   scaffoldBackgroundColor: AppColors.background,
   appBarTheme: const AppBarTheme(
     backgroundColor: AppColors.primary,

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:hrms_app/core/services/auth_service.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/api_endpoints.dart';
 import '../models/employee_model.dart';
 
@@ -50,6 +51,44 @@ class EmployeeService {
     var response = await request.send();
     if (response.statusCode != 200) {
       throw Exception('Failed to upload profile picture');
+    }
+  }
+
+  Future<void> approveEmployee(String email) async {
+    // print("emaiilll: "+email);
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+
+    final response = await http.put(
+      Uri.parse('${ApiEndpoints.baseUrl}/employees/verify/?email=$email'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      print("status: ${response.statusCode}");
+      throw Exception('Failed to approve employee');
+    }
+  }
+
+  Future<void> declineEmployee(String email) async {
+    // print("emaiilll: "+email);
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+
+    final response = await http.put(
+      Uri.parse('${ApiEndpoints.baseUrl}/employees/decline/?email=$email'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      print("status: ${response.statusCode}");
+      throw Exception('Failed to approve employee');
     }
   }
 

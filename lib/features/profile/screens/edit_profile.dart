@@ -56,7 +56,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         return Scaffold(
           appBar: AppBar(
             title: const Text('Edit Profile'),
-            backgroundColor: AppColors.primary,
+            backgroundColor: AppColors.brandColor,
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
@@ -66,7 +66,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   children: [
                     CircleAvatar(
                       radius: 50,
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: AppColors.brandColor,
                       backgroundImage: _selectedImage != null
                           ? FileImage(_selectedImage!)
                           : (employee.profilePic != null &&
@@ -87,7 +87,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         child: const CircleAvatar(
                           radius: 16,
                           backgroundColor: Colors.white,
-                          child: Icon(Icons.edit, size: 18, color: Colors.indigo),
+                          child: Icon(Icons.edit, size: 18, color: AppColors.brandColor),
                         ),
                       ),
                     ),
@@ -101,6 +101,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               _buildField('Department', _departmentController),
               const SizedBox(height: 24),
               ElevatedButton(
+                style: ButtonStyle(backgroundColor: WidgetStateProperty.all(AppColors.brandBase)),
                 onPressed: _isLoading ? null : () async {
                   setState(() => _isLoading = true);
                   try {

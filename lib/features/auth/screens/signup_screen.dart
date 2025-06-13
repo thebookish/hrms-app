@@ -91,7 +91,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   const SizedBox(height: 24),
                   Text(
                     'Create Account',
-                    style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: AppColors.primary),
+                    style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: AppColors.brandColor),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -176,6 +176,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Checkbox(
+                        activeColor: AppColors.brandColor,
                         value: _agreedToTerms,
                         onChanged: (value) {
                           setState(() {
@@ -190,7 +191,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             showDialog(
                               context: context,
                               builder: (_) => AlertDialog(
-                                title: const Text('Terms & Conditions', style: TextStyle(color: AppColors.primary),),
+                                title: const Text('Terms & Conditions', style: TextStyle(color: AppColors.brandColor),),
                                 content: const Text('Put your Terms & Conditions here.'),
                                 actions: [
                                   TextButton(
@@ -208,7 +209,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                 TextSpan(
                                   text: 'Terms & Conditions',
                                   style: TextStyle(
-                                    color: AppColors.primary,
+                                    color: AppColors.brandColor,
                                   ),
                                 ),
                               ],
@@ -231,7 +232,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        backgroundColor: Colors.indigo,
+                        backgroundColor: AppColors.brandColor,
                       ),
                       child: const Text('Register', style: TextStyle(fontSize: 16, color: Colors.white)),
                     ),
@@ -246,7 +247,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       const Text("Already have an account?"),
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('Login', style: TextStyle(color: Colors.indigo),),
+                        child: const Text('Login', style: TextStyle(color: AppColors.brandColor),),
                       ),
                     ],
                   ),

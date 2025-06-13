@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hrms_app/core/constants/app_colors.dart';
 import '../providers/theme_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -12,7 +13,7 @@ class SettingsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
-        backgroundColor: Colors.indigo,
+        backgroundColor: AppColors.brandColor,
         elevation: 0,
       ),
       body: ListView(

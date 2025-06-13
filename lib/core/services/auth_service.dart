@@ -1,3 +1,4 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../core/constants/api_endpoints.dart';
@@ -5,6 +6,9 @@ import '../models/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
+  final _storage = const FlutterSecureStorage();
+
+
   Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_token', token);
@@ -99,4 +103,16 @@ class AuthService {
     }
   }
 
+  Future<UserModel?> getLoggedInUser() async {
+    final email = await _storage.read(key: 'userEmail');
+    final role = await _storage.read(key: 'userRole');
+    final name = await _storage.read(key: 'userName');
+
+    if (email != null && role != null && name != null) {
+      return UserModel(email: email, role: role, name: name, id: '');
+    }
+    return null;
+  }
 }
+
+

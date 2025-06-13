@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hrms_app/core/constants/app_colors.dart';
 import '../../../core/services/auth_service.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
@@ -53,7 +54,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Reset Password')),
+      appBar: AppBar(
+          backgroundColor: AppColors.brandColor,
+          title: const Text('Reset Password')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -80,6 +83,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.brandColor),
               onPressed: _isLoading ? null : _resetPassword,
               child: _isLoading
                   ? const CircularProgressIndicator(color: Colors.white)
