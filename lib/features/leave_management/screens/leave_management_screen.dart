@@ -1,13 +1,97 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hrms_app/core/constants/app_colors.dart';
+import 'package:hrms_app/core/services/employee_services.dart';
+import 'package:hrms_app/core/services/leave_services.dart';
 import 'package:hrms_app/features/leave_management/controllers/leave_provider.dart';
-import '../../../core/constants/app_colors.dart';
+import 'package:hrms_app/core/models/employee_model_new.dart';
 
-class AdminLeaveManagementScreen extends ConsumerWidget {
+class AdminLeaveManagementScreen extends ConsumerStatefulWidget {
   const AdminLeaveManagementScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AdminLeaveManagementScreen> createState() =>
+      _AdminLeaveManagementScreenState();
+}
+
+class _AdminLeaveManagementScreenState
+    extends ConsumerState<AdminLeaveManagementScreen> {
+  final Map<String, EmployeeModelNew> _employeeCache = {};
+
+  Future<EmployeeModelNew?> _getEmployeeByEmail(String email) async {
+    // if (_employeeCache.containsKey(email)) return _employeeCache[email];
+    //
+    // try {
+      final employee = await EmployeeService().getEmployeeDataByEmail(email);
+      _employeeCache[email] = employee;
+      return employee;
+    // } catch (_) {
+    //   return null;
+    // }
+  }
+
+  Future<void> _handleLeaveAction({
+    required String email,
+    required String action,
+    required String type,
+  }) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('${action[0].toUpperCase()}${action.substring(1)} Leave'),
+        content: const Text('Are you sure you want to proceed?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: action == 'approved' ? Colors.green : Colors.red,
+            ),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final employee = await _getEmployeeByEmail(email);
+      if (employee == null) throw Exception('Employee not found');
+
+      if (action == 'approved') {
+        // Deduct leave balance
+        switch (type.toLowerCase()) {
+          case 'sick leave':
+            employee.sickLeave = (employee.sickLeave ?? 0) - 1;
+            break;
+          case 'casual leave':
+            employee.casualLeave = (employee.casualLeave ?? 0) - 1;
+            break;
+          case 'paid leave':
+            employee.paidLeave = (employee.paidLeave ?? 0) - 1;
+            break;
+        }
+
+        await EmployeeService().updateEmployee(employee);
+        await LeaveService().approveLeave(email);
+      } else {
+        await LeaveService().rejectLeave(email);
+      }
+
+      ref.invalidate(leaveRequestsProvider);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Leave $action successfully.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final leaveAsync = ref.watch(leaveRequestsProvider);
 
     return Scaffold(
@@ -26,70 +110,104 @@ class AdminLeaveManagementScreen extends ConsumerWidget {
           return RefreshIndicator(
             onRefresh: () async {
               ref.invalidate(leaveRequestsProvider);
+              _employeeCache.clear();
             },
             child: ListView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(12),
               itemCount: leaves.length,
               itemBuilder: (_, index) {
                 final leave = leaves[index];
+                return FutureBuilder<EmployeeModelNew?>(
+                  future: _getEmployeeByEmail(leave.email),
+                  builder: (_, snapshot) {
+                    final employee = snapshot.data;
+                    final employeeId = employee?.id ?? 'Loading...';
 
-                return AnimatedContainer(
-                  duration: Duration(milliseconds: 300 + (index * 100)),
-                  curve: Curves.easeInOut,
-                  child: Card(
-                    color: Colors.white.withOpacity(0.95),
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(16),
-                      leading: CircleAvatar(
-                        radius: 26,
-                        backgroundColor: AppColors.brandColor.withOpacity(0.2),
-                        child: Icon(
-                          Icons.person_outline,
-                          color: AppColors.brandColor,
-                          size: 28,
-                        ),
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      title: Text(
-                        '${leave.type} Leave',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: AppColors.brandColor,
-                        ),
-                      ),
-                      subtitle: Padding(
-                        padding: const EdgeInsets.only(top: 4),
+                      elevation: 4,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Email: ${leave.email}', style: const TextStyle(fontSize: 13)),
-                            const SizedBox(height: 4),
-                            Text('Duration: ${leave.fromDate} → ${leave.toDate}',
-                                style: const TextStyle(fontSize: 13)),
-                            const SizedBox(height: 4),
-                            Text('Reason: ${leave.reason}', style: const TextStyle(fontSize: 13)),
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: CircleAvatar(
+                                backgroundColor:
+                                AppColors.brandColor.withOpacity(0.2),
+                                child: const Icon(Icons.person,
+                                    color: AppColors.brandColor),
+                              ),
+                              title: Text(
+                                leave.type,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.brandColor),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 4),
+                                  Text('Employee ID: $employeeId'),
+                                  Text('Email: ${leave.email}'),
+                                  Text('Duration: ${leave.fromDate} → ${leave.toDate}'),
+                                  Text('Reason: ${leave.reason}'),
+                                ],
+                              ),
+                              trailing: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: _statusColor(leave.status),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  leave.status.toUpperCase(),
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12),
+                                ),
+                              ),
+                            ),
+                            if (leave.status.toLowerCase() == 'pending')
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  ElevatedButton.icon(
+                                    onPressed: () => _handleLeaveAction(
+                                      email: leave.email,
+                                      action: 'approved',
+                                      type: leave.type,
+                                    ),
+                                    icon: const Icon(Icons.check),
+                                    label: const Text('Approve'),
+                                    style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.green),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  ElevatedButton.icon(
+                                    onPressed: () => _handleLeaveAction(
+                                      email: leave.email,
+                                      action: 'rejected',
+                                      type: leave.type,
+                                    ),
+                                    icon: const Icon(Icons.close),
+                                    label: const Text('Reject'),
+                                    style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red),
+                                  ),
+                                ],
+                              )
                           ],
                         ),
                       ),
-                      trailing: Container(
-                        decoration: BoxDecoration(
-                          color: _statusColor(leave.status),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        child: Text(
-                          leave.status.toUpperCase(),
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-                        ),
-                      ),
-                    ),
-                  ),
+                    );
+                  },
                 );
               },
             ),

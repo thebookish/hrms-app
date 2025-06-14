@@ -14,9 +14,9 @@ class EmployeeModelNew {
   final String? jobType;
   final String? bank;
   final String? salary;
-  final int? sickLeave;
-  final int? casualLeave;
-  final int? paidLeave;
+  late int? sickLeave;
+  late  int? casualLeave;
+  late  int? paidLeave;
   final String? status;
 
 

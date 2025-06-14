@@ -63,4 +63,32 @@ class LeaveService {
       throw Exception('Failed to fetch leave requests');
     }
   }
+
+  Future<void> approveLeave(String email) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    final response = await http.put(
+      Uri.parse('${ApiEndpoints.baseUrl}/leaves/approve?email=$email'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to approve leave');
+    }
+  }
+
+  Future<void> rejectLeave(String email) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    final response = await http.put(
+      Uri.parse('${ApiEndpoints.baseUrl}/leaves/reject?email=$email'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to reject leave');
+    }
+  }
 }

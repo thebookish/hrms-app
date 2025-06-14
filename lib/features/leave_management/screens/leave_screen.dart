@@ -22,12 +22,13 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
   String? _error;
   late TabController _tabController;
 
+  final List<String> leaveTypes = ['Casual', 'Sick', 'Paid'];
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _loadLeaves();
-    EmployeeService().getEmployeeDataByEmail(ref.read(loggedInUserProvider)!.email);
   }
 
   Future<void> _loadLeaves() async {
@@ -58,120 +59,126 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
         elevation: 0,
         title: const Text('Leaves Status', style: TextStyle(fontSize: 20)),
         centerTitle: true,
-        actions: const [
-          // CircleAvatar(radius: 18, backgroundImage: AssetImage('assets/user.png')),
-          SizedBox(width: 12),
-        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : _error != null
-              ? Center(
-                  child: Text('Error: $_error',
-                      style: const TextStyle(color: Colors.white)))
-              : employeeAsync.when(
-                  loading: () => const Center(
-                      child: CircularProgressIndicator(color: Colors.white)),
-                  error: (err, _) => Center(
-                      child: Text('Error: $err',
-                          style: const TextStyle(color: Colors.white))),
-                  data: (employee) {
-                    final sick = employee.sickLeave ?? 0;
-                    final casual = employee.casualLeave ?? 0;
-                    final paid = employee.paidLeave ?? 0;
+          ? Center(
+          child: Text('Error: $_error',
+              style: const TextStyle(color: Colors.white)))
+          : employeeAsync.when(
+        loading: () => const Center(
+            child: CircularProgressIndicator(color: Colors.white)),
+        error: (err, _) => Center(
+            child: Text('Error: $err',
+                style: const TextStyle(color: Colors.white))),
+        data: (employee) {
+          final sick = employee.sickLeave ?? 0;
+          final casual = employee.casualLeave ?? 0;
+          final paid = employee.paidLeave ?? 0;
 
-                    final total = sick + casual + paid;
-                    final used = _leaves.length;
-                    final balance = total - used;
+          int approvedCasual = 0;
+          int approvedSick = 0;
+          int approvedPaid = 0;
 
-                    return Column(
-                      children: [
-                        const SizedBox(height: 8),
-                        CircularPercentIndicator(
-                          radius: 60,
-                          lineWidth: 12,
-                          animation: true,
-                          percent: total == 0
-                              ? 0
-                              : (balance / total).clamp(0.0, 1.0),
-                          center: Text("$balance\nBalance",
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold)),
-                          circularStrokeCap: CircularStrokeCap.round,
-                          backgroundColor: Colors.grey.shade800,
-                          progressColor: Colors.greenAccent,
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _buildStatBox(
-                                "$total", "Total Leaves", Colors.blue),
-                            _buildStatBox(
-                                "$balance", "Leave Balance", Colors.green),
-                            _buildStatBox(
-                                "$used", "Leaves Utilized", Colors.amber),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _buildLeaveTypeCircle("$casual", "Casual"),
-                            _buildLeaveTypeCircle("$sick", "Sick"),
-                            _buildLeaveTypeCircle("$paid", "Paid"),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Container(
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            borderRadius:
-                                BorderRadius.vertical(top: Radius.circular(20)),
-                          ),
-                          child: Column(
-                            children: [
-                              TabBar(
-                                controller: _tabController,
-                                indicatorColor: AppColors.primary,
-                                labelColor: AppColors.primary,
-                                unselectedLabelColor: Colors.grey,
-                                tabs: const [
-                                  Tab(text: "Approvals"),
-                                  Tab(text: "Leave History"),
-                                ],
-                              ),
-                              SizedBox(
-                                height: 300,
-                                child: TabBarView(
-                                  controller: _tabController,
-                                  children: [
-                                    _buildLeaveList(context,
-                                        statusFilter: 'pending'),
-                                    _buildLeaveList(context),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+          for (var leave in _leaves.where((l) => l.status == 'approved')) {
+            switch (leave.type.toLowerCase()) {
+              case 'casual':
+                approvedCasual++;
+                break;
+              case 'sick':
+                approvedSick++;
+                break;
+              case 'paid':
+                approvedPaid++;
+                break;
+            }
+          }
+
+          final total = sick + casual + paid;
+          final used = approvedCasual + approvedSick + approvedPaid;
+          final balance = total - used;
+
+          return Column(
+            children: [
+              const SizedBox(height: 8),
+              CircularPercentIndicator(
+                radius: 60,
+                lineWidth: 12,
+                animation: true,
+                percent: total == 0
+                    ? 0
+                    : (balance / total).clamp(0.0, 1.0),
+                center: Text("$balance\nBalance",
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold)),
+                circularStrokeCap: CircularStrokeCap.round,
+                backgroundColor: Colors.grey.shade800,
+                progressColor: Colors.greenAccent,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildStatBox("$total", "Total Leaves", Colors.blue),
+                  _buildStatBox("$balance", "Balance", Colors.green),
+                  _buildStatBox("$used", "Used", Colors.amber),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildLeaveTypeCircle("${casual - approvedCasual}", "Casual"),
+                  _buildLeaveTypeCircle("${sick - approvedSick}", "Sick"),
+                  _buildLeaveTypeCircle("${paid - approvedPaid}", "Paid"),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius:
+                  BorderRadius.vertical(top: Radius.circular(20)),
                 ),
+                child: Column(
+                  children: [
+                    TabBar(
+                      controller: _tabController,
+                      indicatorColor: AppColors.primary,
+                      labelColor: AppColors.primary,
+                      unselectedLabelColor: Colors.grey,
+                      tabs: const [
+                        Tab(text: "Approved"),
+                        Tab(text: "History"),
+                      ],
+                    ),
+                    SizedBox(
+                      height: 300,
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildLeaveList(context,
+                              statusFilter: 'approved'),
+                          _buildLeaveList(context),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppColors.primary,
-        icon: const Icon(
-          Icons.add,
-          color: Colors.white,
-        ),
-        label: const Text(
-          "Apply Leave",
-          style: TextStyle(color: Colors.white),
-        ),
-        onPressed: () => _showLeaveForm(context, user!.email),
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text("Apply Leave", style: TextStyle(color: Colors.white)),
+        onPressed: () =>
+            _showLeaveForm(context, user!.email, user.name),
       ),
     );
   }
@@ -246,7 +253,7 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
           ),
           child: ListTile(
             title: Text(
-              '${leave.type} Leave\n${leave.fromDate.split("T")[0]} - ${leave.toDate.split("T")[0]}',
+              '${leave.type} \n${leave.fromDate.split("T")[0]} - ${leave.toDate.split("T")[0]}',
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
             subtitle: Text(leave.reason),
@@ -278,11 +285,13 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
     }
   }
 
-  void _showLeaveForm(BuildContext context, String email) {
-    final typeController = TextEditingController();
+  void _showLeaveForm(BuildContext context, String email, String employeeName) {
     final reasonController = TextEditingController();
     DateTime? fromDate;
     DateTime? toDate;
+
+    String? selectedLeaveType;
+    final List<String> leaveTypes = ['Sick Leave', 'Casual Leave', 'Paid Leave'];
 
     showModalBottomSheet(
       context: context,
@@ -307,30 +316,46 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
                   children: [
                     const Text(
                       'Apply for Leave',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 20),
-                    TextField(
-                      controller: typeController,
+
+                    /// Leave Type Dropdown
+                    DropdownButtonFormField<String>(
+                      value: selectedLeaveType,
                       decoration: const InputDecoration(
                         labelText: 'Leave Type',
                         border: OutlineInputBorder(),
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                       ),
+                      items: leaveTypes.map((type) {
+                        return DropdownMenuItem<String>(
+                          value: type,
+                          child: Text(type),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedLeaveType = value;
+                        });
+                      },
                     ),
+
                     const SizedBox(height: 16),
+
+                    /// Reason Field
                     TextField(
                       controller: reasonController,
                       decoration: const InputDecoration(
                         labelText: 'Reason',
                         border: OutlineInputBorder(),
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                       ),
                     ),
+
                     const SizedBox(height: 16),
+
+                    /// From Date
                     Row(
                       children: [
                         Expanded(
@@ -339,17 +364,13 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
                               : 'From: ${fromDate!.toIso8601String().split('T')[0]}'),
                         ),
                         ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.brandColor,
-                            // padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
+                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.brandColor),
                           onPressed: () async {
                             final picked = await showDatePicker(
                               context: context,
                               initialDate: DateTime.now(),
                               firstDate: DateTime.now(),
-                              lastDate:
-                                  DateTime.now().add(const Duration(days: 365)),
+                              lastDate: DateTime.now().add(const Duration(days: 365)),
                             );
                             if (picked != null) {
                               setState(() => fromDate = picked);
@@ -359,7 +380,10 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
                         ),
                       ],
                     ),
+
                     const SizedBox(height: 12),
+
+                    /// To Date
                     Row(
                       children: [
                         Expanded(
@@ -368,17 +392,13 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
                               : 'To: ${toDate!.toIso8601String().split('T')[0]}'),
                         ),
                         ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.brandColor,
-                            // padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
+                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.brandColor),
                           onPressed: () async {
                             final picked = await showDatePicker(
                               context: context,
                               initialDate: fromDate ?? DateTime.now(),
                               firstDate: fromDate ?? DateTime.now(),
-                              lastDate:
-                                  DateTime.now().add(const Duration(days: 365)),
+                              lastDate: DateTime.now().add(const Duration(days: 365)),
                             );
                             if (picked != null) {
                               setState(() => toDate = picked);
@@ -388,27 +408,30 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
                         ),
                       ],
                     ),
+
                     const SizedBox(height: 20),
+
+                    /// Submit Button
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.brandColor,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                       onPressed: () async {
-                        if (typeController.text.isEmpty ||
+                        if (selectedLeaveType == null ||
                             reasonController.text.isEmpty ||
                             fromDate == null ||
                             toDate == null) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('All fields are required')),
+                            const SnackBar(content: Text('All fields are required')),
                           );
                           return;
                         }
 
                         try {
                           await LeaveService().applyLeave(email, {
-                            'type': typeController.text.trim(),
+                            'name': employeeName,
+                            'type': selectedLeaveType,
                             'reason': reasonController.text.trim(),
                             'fromDate': fromDate!.toIso8601String(),
                             'toDate': toDate!.toIso8601String(),
@@ -416,7 +439,7 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
 
                           if (mounted) {
                             Navigator.pop(context);
-                            await _loadLeaves(); // refresh list
+                            await _loadLeaves(); // Refresh list
                           }
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -435,4 +458,5 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
       },
     );
   }
+
 }

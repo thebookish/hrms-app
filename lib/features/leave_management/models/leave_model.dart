@@ -1,5 +1,6 @@
 class LeaveModel {
   final String id;
+  final String name;
   final String email;
   final String type;
   final String fromDate;
@@ -9,6 +10,7 @@ class LeaveModel {
 
   LeaveModel({
     required this.id,
+    required this.name,
     required this.email,
     required this.type,
     required this.fromDate,
@@ -20,6 +22,7 @@ class LeaveModel {
   factory LeaveModel.fromJson(Map<String, dynamic> json) {
     return LeaveModel(
       id: json['_id'] ?? '',
+      name: json['name']??'',
       email: json['email']??'',
       type: json['type'] ?? '',
       fromDate: json['fromDate'] ?? '',
