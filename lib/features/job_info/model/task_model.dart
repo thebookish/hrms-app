@@ -3,8 +3,8 @@ class TaskModel {
   final String title;
   final String deadline;
   final bool isCompleted;
-  final String priority; // "High", "Medium", "Low"
-  final String status; // "In Progress", "Completed", "Pending", etc.
+  final String priority;
+  final String status;
 
   TaskModel({
     required this.id,
@@ -14,4 +14,15 @@ class TaskModel {
     required this.priority,
     required this.status,
   });
+
+  factory TaskModel.fromJson(Map<String, dynamic> json) {
+    return TaskModel(
+      id: json['id'],
+      title: json['title'],
+      deadline: json['deadline'],
+      isCompleted: json['isCompleted'] as bool,
+      priority: json['priority'],
+      status: json['status'],
+    );
+  }
 }

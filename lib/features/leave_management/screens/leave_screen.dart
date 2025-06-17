@@ -51,7 +51,7 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
   Widget build(BuildContext context) {
     final user = ref.watch(loggedInUserProvider);
     final employeeAsync = ref.watch(employeeDataProvider);
-
+    late String? empName;
     return Scaffold(
       backgroundColor: const Color(0xFF0E1D36),
       appBar: AppBar(
@@ -76,27 +76,28 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
           final sick = employee.sickLeave ?? 0;
           final casual = employee.casualLeave ?? 0;
           final paid = employee.paidLeave ?? 0;
-
+          empName = employee.fullName;
           int approvedCasual = 0;
           int approvedSick = 0;
           int approvedPaid = 0;
 
           for (var leave in _leaves.where((l) => l.status == 'approved')) {
             switch (leave.type.toLowerCase()) {
-              case 'casual':
+              case 'casual leave':
                 approvedCasual++;
                 break;
-              case 'sick':
+              case 'sick leave':
                 approvedSick++;
                 break;
-              case 'paid':
+              case 'paid leave':
                 approvedPaid++;
                 break;
             }
           }
 
-          final total = sick + casual + paid;
+
           final used = approvedCasual + approvedSick + approvedPaid;
+          final total = sick + casual + paid + used;
           final balance = total - used;
 
           return Column(
@@ -172,13 +173,14 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
             ],
           );
         },
+
       ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppColors.primary,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text("Apply Leave", style: TextStyle(color: Colors.white)),
         onPressed: () =>
-            _showLeaveForm(context, user!.email, user.name),
+            _showLeaveForm(context, user!.email, empName!),
       ),
     );
   }

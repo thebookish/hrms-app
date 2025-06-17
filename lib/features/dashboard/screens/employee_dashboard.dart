@@ -4,9 +4,12 @@ import 'package:hrms_app/core/constants/app_colors.dart';
 import 'package:hrms_app/features/dashboard/controllers/employee_dashboard_controlller.dart';
 import 'package:hrms_app/features/job_info/screens/job_info_screen.dart';
 import 'package:hrms_app/features/leave_management/screens/leave_screen.dart';
+import 'package:hrms_app/features/notifications/screens/notifcation_screen.dart';
+import 'package:hrms_app/features/profile/screens/family_members_details.dart';
 import 'package:hrms_app/features/profile/screens/view_profile.dart';
 import 'package:hrms_app/features/salary/screens/salary_info_screen.dart';
 import 'package:hrms_app/features/settings/screens/settings_screen.dart';
+import 'package:hrms_app/features/sponsor/screens/sponsor_details_screen.dart';
 
 class EmployeeDashboard extends ConsumerStatefulWidget {
   const EmployeeDashboard({super.key});
@@ -64,15 +67,15 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
       data: (employee) => Scaffold(
         backgroundColor: const Color(0xFFF7F8FA),
         appBar: AppBar(
-          title: const Text('Employee Dashboard'),
-          centerTitle: true,
+          // title: const Text('Employee Dashboard'),
+          // centerTitle: true,
           backgroundColor: AppColors.brandColor,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.notifications_none),
-              onPressed: () => _showNotificationsModal(context, employee.notifications),
-            ),
-          ],
+          // actions: [
+          //   IconButton(
+          //     icon: const Icon(Icons.notifications_none),
+          //     onPressed: () => _showNotificationsModal(context, employee.notifications),
+          //   ),
+          // ],
         ),
         body: Padding(
       padding: const EdgeInsets.all(16.0),
@@ -103,7 +106,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
           ),
 
           // Index 1 — Placeholder for Profile or Alerts
-          // const ProfileScreen()
+          const NotificationScreen()
         ],
       ),
     ),
@@ -140,7 +143,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
                  }
                 ),
                 IconButton(
-                  icon: Icon(Icons.person,size: 30,
+                  icon: Icon(Icons.notifications_active_outlined,size: 30,
                       color: _selectedIndex == 1 ? AppColors.accent : Colors.white),
                   onPressed: () => {
                     _onItemTapped(1),
@@ -195,6 +198,30 @@ class _DashboardCard extends StatelessWidget {
               context,
               MaterialPageRoute(builder: (_) => const SalaryInfoScreen()),
             );
+          }
+          if(title=='Family Members'){
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const FamilyMembersScreen()),
+            );
+          }
+          if(title=='Sponsor Details'){
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const SponsorDetailsScreen(
+                  sponsorName: "ABC Corporation",
+                  sponsorId: "SPN-2048",
+                  industry: "Technology",
+                  contactPerson: "John Doe",
+                  email: "john.doe@abccorp.com",
+                  phone: "+1 234 567 8900",
+                  address: "123 Silicon Valley, CA, USA",
+                  logoUrl: "https://example.com/logo.png",
+                ),
+              ),
+            );
+
           }
         },
         child: Container(

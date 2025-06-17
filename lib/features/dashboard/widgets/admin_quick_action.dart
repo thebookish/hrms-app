@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hrms_app/core/constants/app_colors.dart';
+import 'package:hrms_app/features/job_info/screens/approved_employee_screen_for_task.dart';
+import 'package:hrms_app/features/job_info/screens/assign_task_screen.dart';
 import 'package:hrms_app/features/leave_management/screens/leave_management_screen.dart';
+import 'package:hrms_app/features/salary/screens/employee_list_for_salary_screen.dart';
 // Import other target screens as needed
 
 class AdminQuickActionsSection extends StatefulWidget {
@@ -34,14 +37,25 @@ class _AdminQuickActionsSectionState extends State<AdminQuickActionsSection> {
         title: 'Task\nManagement',
         icon: Icons.task,
         onTap: () {
-          // TODO: Navigate to Task Management Screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ApprovedEmployeeListScreen(),
+            ),
+          );
+
         },
       ),
       _AdminActionItem(
         title: 'Salary\nManagement',
         icon: Icons.attach_money,
         onTap: () {
-          // TODO: Navigate to Salary Management Screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ApprovedEmployeeListScreenTwo(),
+            ),
+          );
         },
       ),
       _AdminActionItem(

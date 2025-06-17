@@ -124,6 +124,7 @@ class _AdminLeaveManagementScreenState
                     final employeeId = employee?.id ?? 'Loading...';
 
                     return Card(
+                      color: AppColors.white,
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -152,6 +153,7 @@ class _AdminLeaveManagementScreenState
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const SizedBox(height: 4),
+                                  Text('Name: ${leave.name}'),
                                   Text('Employee ID: $employeeId'),
                                   Text('Email: ${leave.email}'),
                                   Text('Duration: ${leave.fromDate} → ${leave.toDate}'),
@@ -179,6 +181,7 @@ class _AdminLeaveManagementScreenState
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
                                   ElevatedButton.icon(
+
                                     onPressed: () => _handleLeaveAction(
                                       email: leave.email,
                                       action: 'approved',
@@ -187,6 +190,7 @@ class _AdminLeaveManagementScreenState
                                     icon: const Icon(Icons.check),
                                     label: const Text('Approve'),
                                     style: ElevatedButton.styleFrom(
+
                                         backgroundColor: Colors.green),
                                   ),
                                   const SizedBox(width: 8),
