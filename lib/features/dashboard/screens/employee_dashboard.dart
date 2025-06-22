@@ -31,7 +31,30 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
 
     return employeeAsync.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (err, stack) => Scaffold(body: Center(child: Text('Error: $err'))),
+      error: (err, stack) => Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error, color: Colors.red, size: 40),
+              const SizedBox(height: 10),
+              const Text('Something went wrong', style: TextStyle(fontSize: 16)),
+              const SizedBox(height: 8),
+              Text(err.toString(), style: const TextStyle(color: Colors.grey)),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () => ref.invalidate(employeeDataProvider),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.brandColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+
       data: (employee) => Scaffold(
         backgroundColor: const Color(0xFFF7F8FA),
         appBar: AppBar(

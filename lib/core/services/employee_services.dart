@@ -23,7 +23,6 @@ class EmployeeService {
   Future<EmployeeModelNew> getEmployeeDataByEmail(String email) async {
 
     final token = await AuthService().getToken();
-    // print('staaaat: '+email);
     final response = await http.get(
 
       Uri.parse('${ApiEndpoints.baseUrl}/employees/emp-data/?email=$email'),
@@ -33,12 +32,12 @@ class EmployeeService {
       },
 
     );
-    print('staaaat: '+response.statusCode.toString());
     if (response.statusCode == 200) {
       return EmployeeModelNew.fromJson(jsonDecode(response.body));
-    } else {
-      print('staaaat: '+response.statusCode.toString());
-      throw Exception('Failed to load employee data');
+    } else if(response.statusCode == 404){
+      throw Exception("User not found");
+    }else{
+      throw Exception("Something went wrong!");
     }
   }
   Future<EmployeeModel> updateEmployeeProfile({

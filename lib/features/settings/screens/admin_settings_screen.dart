@@ -14,10 +14,10 @@ class AdminSettingsScreen extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: AppColors.brandColor,
-      ),
+      // appBar: AppBar(
+      //   title: const Text('Settings'),
+      //   backgroundColor: AppColors.brandColor,
+      // ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

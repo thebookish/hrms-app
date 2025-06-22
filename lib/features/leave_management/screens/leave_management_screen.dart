@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hrms_app/core/constants/app_colors.dart';
 import 'package:hrms_app/core/services/employee_services.dart';
 import 'package:hrms_app/core/services/leave_services.dart';
+import 'package:hrms_app/core/services/notification_service.dart';
 import 'package:hrms_app/features/leave_management/controllers/leave_provider.dart';
 import 'package:hrms_app/core/models/employee_model_new.dart';
 
@@ -79,6 +80,13 @@ class _AdminLeaveManagementScreenState
         await LeaveService().rejectLeave(email);
       }
 
+      // Send Notification
+      await NotificationService().sendNotification(
+        title: 'Leave ${action == 'approved' ? 'Approved' : 'Rejected'}',
+        message: 'Your ${type.toLowerCase()} has been ${action.toLowerCase()} by HR.',
+        receiverEmail: email,
+      );
+
       ref.invalidate(leaveRequestsProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Leave $action successfully.')),
@@ -89,6 +97,7 @@ class _AdminLeaveManagementScreenState
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

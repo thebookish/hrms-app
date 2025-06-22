@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hrms_app/core/constants/app_colors.dart';
 import 'package:hrms_app/core/services/notification_service.dart';
 import 'package:hrms_app/core/services/salary_services.dart';
+import 'package:hrms_app/features/salary/models/salary_model.dart';
 
 class AddSalaryInfoScreen extends StatefulWidget {
   final String? employeeEmail;
@@ -21,9 +22,43 @@ class _AddSalaryInfoScreenState extends State<AddSalaryInfoScreen> {
   final TextEditingController _monthController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
   String _paymentStatus = 'Paid';
-
   final TextEditingController _incrementDateController = TextEditingController();
   final TextEditingController _newSalaryController = TextEditingController();
+
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExistingSalary();
+  }
+
+  Future<void> _loadExistingSalary() async {
+    try {
+      final data = await SalaryService().getSalaryInfo(widget.employeeEmail!);
+      final model = SalaryModel.fromJson(data);
+
+      _basicController.text = model.basic.toStringAsFixed(2);
+      _hraController.text = model.hra.toStringAsFixed(2);
+      _allowanceController.text = model.allowance.toStringAsFixed(2);
+      _deductionController.text = model.deduction.toStringAsFixed(2);
+
+      if (model.paymentHistory.isNotEmpty) {
+        _monthController.text = model.paymentHistory.first.month;
+        _amountController.text = model.paymentHistory.first.amount.toStringAsFixed(2);
+        _paymentStatus = model.paymentHistory.first.status;
+      }
+
+      if (model.upcomingIncrements.isNotEmpty) {
+        _incrementDateController.text = model.upcomingIncrements.first.effectiveDate;
+        _newSalaryController.text = model.upcomingIncrements.first.newSalary.toStringAsFixed(2);
+      }
+    } catch (_) {
+      // It's okay if no salary exists yet
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -52,7 +87,6 @@ class _AddSalaryInfoScreenState extends State<AddSalaryInfoScreen> {
     try {
       await SalaryService().addSalaryInfo(salaryData);
 
-      // ✅ Send notification to employee
       await NotificationService().sendNotification(
         title: 'New Salary Info Added',
         message: 'Your salary details have been updated. Check now.',
@@ -72,7 +106,6 @@ class _AddSalaryInfoScreenState extends State<AddSalaryInfoScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,12 +113,15 @@ class _AddSalaryInfoScreenState extends State<AddSalaryInfoScreen> {
         title: const Text('Add Salary Info'),
         backgroundColor: AppColors.brandColor,
       ),
-      body: Padding(
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: ListView(
             children: [
+              const SizedBox(height: 15),
               _buildTextField(_basicController, 'Basic Salary'),
               _buildTextField(_hraController, 'HRA'),
               _buildTextField(_allowanceController, 'Allowance'),
@@ -93,6 +129,7 @@ class _AddSalaryInfoScreenState extends State<AddSalaryInfoScreen> {
 
               const SizedBox(height: 24),
               const Text('Payment History', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
               _buildTextField(_monthController, 'Month (e.g. May 2025)'),
               _buildTextField(_amountController, 'Amount'),
               DropdownButtonFormField<String>(
@@ -106,6 +143,7 @@ class _AddSalaryInfoScreenState extends State<AddSalaryInfoScreen> {
 
               const SizedBox(height: 24),
               const Text('Upcoming Increment', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
               _buildTextField(_incrementDateController, 'Effective Date (e.g. 2025-08-01)'),
               _buildTextField(_newSalaryController, 'New Salary'),
 

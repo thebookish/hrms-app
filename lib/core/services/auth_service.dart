@@ -69,6 +69,36 @@ class AuthService {
       throw Exception('Signup failed: ${response.body}');
     }
   }
+  Future<void> sendOtp({required String email}) async {
+    final response = await http.post(
+      Uri.parse('${ApiEndpoints.baseUrl}/auth/send-otp'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email}),
+    );
+    if (response.statusCode != 200) {
+      print('response: '+response.statusCode.toString());
+      throw Exception('Failed to send OTP');
+    }
+  }
+
+  Future<bool> verifyOtp({required String email, required String otp}) async {
+    final response = await http.post(
+      Uri.parse('${ApiEndpoints.baseUrl}/auth/verify-otp'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email,
+        'otp': otp.trim(), // ensures it's string, no space
+      }),
+    );
+    if (response.statusCode == 200) {
+
+      return true;
+    } else {
+      print('response: '+response.statusCode.toString());
+      return false;
+    }
+  }
+
   Future<void> sendResetOtp(String email) async {
     final response = await http.post(
       Uri.parse('${ApiEndpoints.baseUrl}/auth/forgot-password'),

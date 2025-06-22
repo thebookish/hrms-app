@@ -14,12 +14,15 @@ final employeeProvider = FutureProvider<EmployeeModel>((ref) {
   return EmployeeService().getEmployeeByEmail(user.email);
 });
 
-final employeeDataProvider = FutureProvider<EmployeeModelNew>((ref) {
+final employeeDataProvider = FutureProvider<EmployeeModelNew>((ref) async {
   final user = ref.watch(loggedInUserProvider);
 
-  if (user == null) {
-    throw Exception('User not logged in');
+  try {
+    return await EmployeeService().getEmployeeDataByEmail(user!.email);
+  } catch (e) {
+    if (e.toString().contains('User not found')) {
+      return EmployeeModelNew(status: 'pending'); // or 'pending'
+    }
+    throw e;
   }
-
-  return EmployeeService().getEmployeeDataByEmail(user.email);
 });

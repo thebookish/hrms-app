@@ -9,6 +9,7 @@ import 'package:hrms_app/features/dashboard/widgets/employee_list_card.dart';
 import 'package:hrms_app/features/dashboard/widgets/header_card.dart';
 import 'package:hrms_app/features/dashboard/widgets/salary_chart.dart';
 import 'package:hrms_app/features/dashboard/widgets/schedule_card.dart';
+import 'package:hrms_app/features/settings/screens/admin_settings_screen.dart';
 import '../../../core/constants/app_colors.dart';
 
 class AdminDashboard extends ConsumerStatefulWidget {
@@ -98,7 +99,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
       case 1:
         return const EmployeeTabScreen();
       case 2:
-        return const Center(child: Text('Settings (Coming Soon)'));
+        return const AdminSettingsScreen();
       default:
         return const SizedBox.shrink();
     }

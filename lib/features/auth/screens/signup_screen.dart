@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hrms_app/core/constants/app_colors.dart';
+import 'package:hrms_app/features/auth/screens/verify_otp_screen.dart';
 import '../../../core/services/auth_service.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -31,27 +32,33 @@ class _SignupScreenState extends State<SignupScreen> {
       );
       return;
     }
+
     setState(() => _isLoading = true);
+
     try {
-      final user = await _authService.signup(
-        name: _nameController.text.trim(),
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      // ✅ Send OTP only, do NOT call signup yet
+      await _authService.sendOtp(email: _emailController.text.trim());
+
+      // ✅ Navigate to VerifyOtpScreen with all user info
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VerifyOtpScreen(
+            name: _nameController.text.trim(),
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          ),
+        ),
       );
-      if (user != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Welcome ${user.name}, registration successful!')),
-        );
-        Navigator.pop(context); // Go back to login
-      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Signup error: $e')),
+        SnackBar(content: Text('Error sending OTP: $e')),
       );
     } finally {
       setState(() => _isLoading = false);
     }
   }
+
 
   InputDecoration _inputDecoration({required String label, required IconData icon}) {
     return InputDecoration(

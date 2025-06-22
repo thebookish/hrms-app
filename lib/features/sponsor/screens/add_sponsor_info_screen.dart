@@ -1,5 +1,3 @@
-// features/sponsor/screens/add_sponsor_info_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:hrms_app/core/constants/app_colors.dart';
 import 'package:hrms_app/core/services/notification_service.dart';
@@ -19,16 +17,37 @@ class _AddSponsorInfoScreenState extends State<AddSponsorInfoScreen> {
   final TextEditingController _name = TextEditingController();
   final TextEditingController _industry = TextEditingController();
   final TextEditingController _contactPerson = TextEditingController();
-  // final TextEditingController _email = TextEditingController();
   final TextEditingController _phone = TextEditingController();
   final TextEditingController _address = TextEditingController();
   final TextEditingController _logoUrl = TextEditingController();
 
   bool _isSubmitting = false;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSponsorData();
+  }
+
+  Future<void> _loadSponsorData() async {
+    try {
+      final sponsor = await SponsorService().fetchSponsor(widget.employeeEmail);
+      _name.text = sponsor.name;
+      _industry.text = sponsor.industry;
+      _contactPerson.text = sponsor.contactPerson;
+      _phone.text = sponsor.phone;
+      _address.text = sponsor.address;
+      _logoUrl.text = sponsor.logoUrl;
+    } catch (e) {
+      debugPrint('No sponsor data found or error: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isSubmitting = true);
 
     final sponsorData = SponsorModel(
@@ -43,23 +62,30 @@ class _AddSponsorInfoScreenState extends State<AddSponsorInfoScreen> {
 
     try {
       await SponsorService().addSponsor(sponsorData);
-      await NotificationService().sendNotification(title: 'Sponsor Info Updated!', message: 'Your sponsor info just updated. Check it now.', receiverEmail: widget.employeeEmail);
+
+      await NotificationService().sendNotification(
+        title: 'Sponsor Info Updated!',
+        message: 'Your sponsor info just updated. Check it now.',
+        receiverEmail: widget.employeeEmail,
+      );
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sponsor info added successfully')),
+          const SnackBar(content: Text('Sponsor info saved')),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(content: Text('Error saving sponsor info: $e')),
       );
     } finally {
       setState(() => _isSubmitting = false);
     }
   }
 
-  Widget _buildField(TextEditingController controller, String label, {TextInputType type = TextInputType.text}) {
+  Widget _buildField(TextEditingController controller, String label,
+      {TextInputType type = TextInputType.text}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: TextFormField(
@@ -81,7 +107,9 @@ class _AddSponsorInfoScreenState extends State<AddSponsorInfoScreen> {
         title: const Text('Add Sponsor Info'),
         backgroundColor: AppColors.brandColor,
       ),
-      body: Padding(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
         padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
@@ -90,7 +118,6 @@ class _AddSponsorInfoScreenState extends State<AddSponsorInfoScreen> {
               _buildField(_name, "Sponsor Name"),
               _buildField(_industry, "Industry"),
               _buildField(_contactPerson, "Contact Person"),
-              // _buildField(_email, "Email", type: TextInputType.emailAddress),
               _buildField(_phone, "Phone", type: TextInputType.phone),
               _buildField(_address, "Address"),
               _buildField(_logoUrl, "Logo URL"),
