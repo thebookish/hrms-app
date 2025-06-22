@@ -4,11 +4,28 @@ import 'package:hrms_app/core/models/employee_model_new.dart';
 import 'package:hrms_app/features/dashboard/controllers/admin_provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/employee_services.dart';
+import '../../../core/services/notification_service.dart'; // <-- import this
 
 class PendingEmployeeDetailsScreen extends ConsumerWidget {
   final EmployeeModelNew employee;
 
   const PendingEmployeeDetailsScreen({super.key, required this.employee});
+
+  Future<void> _sendNotification({
+    required String title,
+    required String message,
+    required String receiverEmail,
+  }) async {
+    try {
+      await NotificationService().sendNotification(
+        title: title,
+        message: message,
+        receiverEmail: receiverEmail,
+      );
+    } catch (e) {
+      debugPrint('Failed to send notification: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -58,6 +75,11 @@ class PendingEmployeeDetailsScreen extends ConsumerWidget {
                     label: const Text('Approve Employee'),
                     onPressed: () async {
                       await EmployeeService().approveEmployee(employee.email ?? '');
+                      await _sendNotification(
+                        title: 'Verification Approved',
+                        message: 'Hi $name, your employment verification has been approved.',
+                        receiverEmail: employee.email ?? '',
+                      );
                       ref.invalidate(verificationRequestProvider);
                       ref.invalidate(approvedEmployeesProvider);
                       if (context.mounted) {
@@ -78,42 +100,45 @@ class PendingEmployeeDetailsScreen extends ConsumerWidget {
                     ),
                     icon: const Icon(Icons.cancel),
                     label: const Text('Decline'),
-                      onPressed: () async {
-                        final confirmed = await showDialog(
-                          context: context,
-                          builder: (_) => AlertDialog(
-                            title: const Text('Decline Employee'),
-                            content: const Text('Are you sure you want to decline this employee?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text('Decline', style: TextStyle(color: Colors.red)),
-                              ),
-                            ],
-                          ),
-                        );
+                    onPressed: () async {
+                      final confirmed = await showDialog(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          title: const Text('Decline Employee'),
+                          content: const Text('Are you sure you want to decline this employee?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text('Decline', style: TextStyle(color: Colors.red)),
+                            ),
+                          ],
+                        ),
+                      );
 
-                        if (confirmed == true) {
-                          await EmployeeService().declineEmployee(employee.email ?? '');
-                          ref.invalidate(verificationRequestProvider);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Employee declined')),
-                            );
-                            Navigator.pop(context);
-                          }
+                      if (confirmed == true) {
+                        await EmployeeService().declineEmployee(employee.email ?? '');
+                        await _sendNotification(
+                          title: 'Verification Declined',
+                          message: 'Hi $name, unfortunately your employment verification was declined.',
+                          receiverEmail: employee.email ?? '',
+                        );
+                        ref.invalidate(verificationRequestProvider);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Employee declined')),
+                          );
+                          Navigator.pop(context);
                         }
                       }
-
+                    },
                   ),
                 ),
               ],
             ),
-
           ],
         ),
       ),

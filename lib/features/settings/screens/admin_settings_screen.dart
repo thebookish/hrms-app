@@ -6,8 +6,8 @@ import 'package:hrms_app/features/auth/screens/login_screen.dart';
 import 'package:hrms_app/features/settings/screens/change_pass_screen.dart';
 import '../providers/theme_provider.dart';
 
-class SettingsScreen extends ConsumerWidget {
-  const SettingsScreen({super.key});
+class AdminSettingsScreen extends ConsumerWidget {
+  const AdminSettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -3,7 +3,10 @@ import 'package:hrms_app/core/constants/app_colors.dart';
 import 'package:hrms_app/features/job_info/screens/approved_employee_screen_for_task.dart';
 import 'package:hrms_app/features/job_info/screens/assign_task_screen.dart';
 import 'package:hrms_app/features/leave_management/screens/leave_management_screen.dart';
+import 'package:hrms_app/features/notifications/screens/hr_notifications_screen.dart';
 import 'package:hrms_app/features/salary/screens/employee_list_for_salary_screen.dart';
+import 'package:hrms_app/features/sponsor/screens/add_sponsor_info_screen.dart';
+import 'package:hrms_app/features/sponsor/screens/employee_list_screen_sponsor.dart';
 // Import other target screens as needed
 
 class AdminQuickActionsSection extends StatefulWidget {
@@ -69,14 +72,24 @@ class _AdminQuickActionsSectionState extends State<AdminQuickActionsSection> {
         title: 'Notifications',
         icon: Icons.notification_important_sharp,
         onTap: () {
-          // TODO: Navigate to Notifications Screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => HRNotificationScreen(),
+            ),
+          );
         },
       ),
       _AdminActionItem(
         title: 'Sponsors',
         icon: Icons.handshake,
         onTap: () {
-          // TODO: Navigate to Sponsor Management Screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => EmployeeListScreenSponsor(),
+            ),
+          );
         },
       ),
     ];

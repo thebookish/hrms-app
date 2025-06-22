@@ -17,6 +17,7 @@ class EmployeeModelNew {
   late int? sickLeave;
   late  int? casualLeave;
   late  int? paidLeave;
+  late String? fcmToken;
   final String? status;
 
 
@@ -39,6 +40,7 @@ class EmployeeModelNew {
     this.sickLeave,
     this.casualLeave,
     this.paidLeave,
+    this.fcmToken,
     this.status,
   });
   EmployeeModelNew copyWith({
@@ -61,6 +63,7 @@ class EmployeeModelNew {
     int? sickLeave,
     int? casualLeave,
     int? paidLeave,
+    String? fcmToken,
     String? status,
   }) {
     return EmployeeModelNew(
@@ -83,6 +86,7 @@ class EmployeeModelNew {
       sickLeave: sickLeave?? this.sickLeave,
       casualLeave: casualLeave??this.casualLeave,
       paidLeave: paidLeave??this.paidLeave,
+      fcmToken: fcmToken?? this.fcmToken,
       status: status ?? this.status,
     );
   }
@@ -106,6 +110,7 @@ class EmployeeModelNew {
       sickLeave: json['sickLeave'],
       casualLeave: json['casualLeave'],
       paidLeave:  json['paidLeave'],
+      fcmToken: json['fcmToken'],
       status: json['status'],
     );
   }
@@ -130,6 +135,7 @@ class EmployeeModelNew {
       'sickLeave': sickLeave,
       'casualLeave': casualLeave,
       'paidLeave': paidLeave,
+      'fcmToken': fcmToken,
       'status': status,
     };
   }

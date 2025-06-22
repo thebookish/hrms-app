@@ -100,77 +100,79 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
           final total = sick + casual + paid + used;
           final balance = total - used;
 
-          return Column(
-            children: [
-              const SizedBox(height: 8),
-              CircularPercentIndicator(
-                radius: 60,
-                lineWidth: 12,
-                animation: true,
-                percent: total == 0
-                    ? 0
-                    : (balance / total).clamp(0.0, 1.0),
-                center: Text("$balance\nBalance",
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold)),
-                circularStrokeCap: CircularStrokeCap.round,
-                backgroundColor: Colors.grey.shade800,
-                progressColor: Colors.greenAccent,
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildStatBox("$total", "Total Leaves", Colors.blue),
-                  _buildStatBox("$balance", "Balance", Colors.green),
-                  _buildStatBox("$used", "Used", Colors.amber),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildLeaveTypeCircle("${casual - approvedCasual}", "Casual"),
-                  _buildLeaveTypeCircle("${sick - approvedSick}", "Sick"),
-                  _buildLeaveTypeCircle("${paid - approvedPaid}", "Paid"),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius:
-                  BorderRadius.vertical(top: Radius.circular(20)),
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                const SizedBox(height: 8),
+                CircularPercentIndicator(
+                  radius: 60,
+                  lineWidth: 12,
+                  animation: true,
+                  percent: total == 0
+                      ? 0
+                      : (balance / total).clamp(0.0, 1.0),
+                  center: Text("$balance\nBalance",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold)),
+                  circularStrokeCap: CircularStrokeCap.round,
+                  backgroundColor: Colors.grey.shade800,
+                  progressColor: Colors.greenAccent,
                 ),
-                child: Column(
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    TabBar(
-                      controller: _tabController,
-                      indicatorColor: AppColors.primary,
-                      labelColor: AppColors.primary,
-                      unselectedLabelColor: Colors.grey,
-                      tabs: const [
-                        Tab(text: "Approved"),
-                        Tab(text: "History"),
-                      ],
-                    ),
-                    SizedBox(
-                      height: 300,
-                      child: TabBarView(
-                        controller: _tabController,
-                        children: [
-                          _buildLeaveList(context,
-                              statusFilter: 'approved'),
-                          _buildLeaveList(context),
-                        ],
-                      ),
-                    ),
+                    _buildStatBox("$total", "Total Leaves", Colors.blue),
+                    _buildStatBox("$balance", "Balance", Colors.green),
+                    _buildStatBox("$used", "Used", Colors.amber),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildLeaveTypeCircle("${casual - approvedCasual}", "Casual"),
+                    _buildLeaveTypeCircle("${sick - approvedSick}", "Sick"),
+                    _buildLeaveTypeCircle("${paid - approvedPaid}", "Paid"),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius:
+                    BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                  child: Column(
+                    children: [
+                      TabBar(
+                        controller: _tabController,
+                        indicatorColor: AppColors.primary,
+                        labelColor: AppColors.primary,
+                        unselectedLabelColor: Colors.grey,
+                        tabs: const [
+                          Tab(text: "Approved"),
+                          Tab(text: "History"),
+                        ],
+                      ),
+                      SizedBox(
+                        height: 300,
+                        child: TabBarView(
+                          controller: _tabController,
+                          children: [
+                            _buildLeaveList(context,
+                                statusFilter: 'approved'),
+                            _buildLeaveList(context),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           );
         },
 

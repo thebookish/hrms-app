@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hrms_app/core/constants/app_colors.dart';
+import 'package:hrms_app/core/services/notification_service.dart';
 import 'package:hrms_app/core/services/task_services.dart';
 import 'package:hrms_app/features/job_info/model/task_model.dart';
 import 'package:intl/intl.dart';
@@ -31,7 +32,21 @@ class _AssignTaskScreenState extends State<AssignTaskScreen> {
     super.initState();
     _loadTasks();
   }
-
+  Future<void> _sendNotification({
+    required String title,
+    required String message,
+    required String receiverEmail,
+  }) async {
+    try {
+      await NotificationService().sendNotification(
+        title: title,
+        message: message,
+        receiverEmail: receiverEmail,
+      );
+    } catch (e) {
+      debugPrint('Failed to send notification: $e');
+    }
+  }
   Future<void> _loadTasks() async {
     try {
       final response = await TaskService().getUserTasks(widget.employeeEmail!);
@@ -58,9 +73,12 @@ class _AssignTaskScreenState extends State<AssignTaskScreen> {
       return;
     }
 
+    final taskId = const Uuid().v4();
+    final taskTitle = _titleController.text.trim();
+
     final taskData = {
-      'id': const Uuid().v4(),
-      'title': _titleController.text.trim(),
+      'id': taskId,
+      'title': taskTitle,
       'deadline': _selectedDeadline!.toIso8601String(),
       'isCompleted': false,
       'priority': _selectedPriority,
@@ -70,6 +88,14 @@ class _AssignTaskScreenState extends State<AssignTaskScreen> {
 
     try {
       await TaskService().createTask(taskData);
+
+      // ✅ Send notification after creating the task
+      await _sendNotification(
+        title: 'New Task Assigned',
+        message: 'Task "$taskTitle" has been assigned to you.',
+        receiverEmail: widget.employeeEmail!,
+      );
+
       await _loadTasks(); // Refresh list
       _titleController.clear();
       _selectedPriority = null;

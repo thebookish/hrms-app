@@ -1,179 +1,158 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hrms_app/core/services/notification_service.dart';
+import 'package:hrms_app/features/auth/controllers/user_provider.dart';
+import 'package:hrms_app/features/notifications/controllers/notification_provider.dart';
+import 'package:intl/intl.dart';
 import 'package:hrms_app/core/constants/app_colors.dart';
+import 'package:hrms_app/features/notifications/model/notification_model.dart';
 
-class NotificationScreen extends StatefulWidget {
+class NotificationScreen extends ConsumerStatefulWidget {
   const NotificationScreen({super.key});
 
   @override
-  State<NotificationScreen> createState() => _NotificationScreenState();
+  ConsumerState<NotificationScreen> createState() => _NotificationScreenState();
 }
 
-class _NotificationScreenState extends State<NotificationScreen> {
+class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   bool pushEnabled = true;
-  int selectedTabIndex = 0;
-
-  final List<NotificationItem> notifications = [
-    NotificationItem(
-      title: 'Anything',
-      message:
-      'Empowering employees with seamless access to personal details, job updates, and streamlined HR processes.',
-      isRead: false,
-    ),
-    NotificationItem(
-      title: 'Anything',
-      message:
-      'Empowering employees with seamless access to personal details, job updates, and streamlined HR processes.',
-      isRead: false,
-    ),
-  ];
-
-  void _markAllRead() {
-    setState(() {
-      for (var n in notifications) {
-        n.isRead = true;
-      }
-    });
-  }
+  String filter = 'All';
 
   @override
   Widget build(BuildContext context) {
-    final tabs = ['All', 'Unread', 'Read'];
-
-    List<NotificationItem> filteredNotifications = switch (selectedTabIndex) {
-      0 => notifications,
-      1 => notifications.where((n) => !n.isRead).toList(),
-      2 => notifications.where((n) => n.isRead).toList(),
-      _ => notifications,
-    };
+    final user = ref.watch(loggedInUserProvider);
+    final notificationsAsync = ref.watch(notificationsProvider);
 
     return Scaffold(
       // appBar: AppBar(
-      //   title: const Text('Notifications'),
-      //   centerTitle: true,
+      //   title: const Text('Notifications', style: TextStyle(fontWeight: FontWeight.bold)),
       //   backgroundColor: Colors.white,
       //   foregroundColor: Colors.black,
-      //   elevation: 0.5,
-      //   // leading: const BackButton(),
+      //   elevation: 0,
       // ),
       body: Column(
         children: [
-          // Push toggle
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                const Text(
-                  "Push notifications",
-                  style: TextStyle(fontWeight: FontWeight.w500),
-                ),
-                const Spacer(),
-                Switch(
-                  value: pushEnabled,
-                  onChanged: (val) => setState(() => pushEnabled = val),
-                  activeColor: AppColors.brandColor,
-                ),
-              ],
-            ),
+          SwitchListTile(
+            title: const Text('Push notifications', style: TextStyle(fontWeight: FontWeight.w500)),
+            value: pushEnabled,
+            onChanged: (val) => setState(() => pushEnabled = val),
+            activeColor: AppColors.brandColor,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
           ),
-          // Tabs
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: Row(
-              children: List.generate(
-                tabs.length,
-                    (index) => Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => selectedTabIndex = index),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: selectedTabIndex == index
-                            ? Colors.white
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        tabs[index],
-                        style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          color: selectedTabIndex == index
-                              ? AppColors.brandColor
-                              : Colors.black54,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
+          _buildTabBar(),
           Expanded(
-            child: ListView.builder(
-              itemCount: filteredNotifications.length,
-              itemBuilder: (_, index) {
-                final n = filteredNotifications[index];
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.brandColor.withOpacity(0.3)),
-                    borderRadius: BorderRadius.circular(12),
-                    color: Colors.white,
-                  ),
-                  child: ListTile(
-                    leading: Icon(
-                      Icons.circle,
-                      size: 10,
-                      color: n.isRead ? Colors.transparent : Colors.blue,
-                    ),
-                    title: Text(n.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 4.0),
-                      child: Text(n.message),
-                    ),
-                  ),
+            child: notificationsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, _) => Center(child: Text('Error: $err')),
+              data: (notifications) {
+                final filtered = filter == 'All'
+                    ? notifications
+                    : notifications.where((n) => filter == 'Unread' ? !n.isRead : n.isRead).toList();
+
+                if (filtered.isEmpty) {
+                  return const Center(child: Text('No notifications.'));
+                }
+
+                return ListView.builder(
+                  itemCount: filtered.length,
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                  itemBuilder: (_, index) => _buildNotificationCard(filtered[index]),
                 );
               },
             ),
           ),
-          if (notifications.any((n) => !n.isRead))
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: ElevatedButton(
-                onPressed: _markAllRead,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  side: BorderSide(color: AppColors.brandColor),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                child: const Text(
-                  "Mark all read",
-                  style: TextStyle(color: AppColors.brandColor),
-                ),
-              ),
-            )
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () {
+             NotificationService().markAllAsRead(user!.email);
+             ref.invalidate(notificationsProvider);
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.brandColor,
+              side: const BorderSide(color: AppColors.brandColor),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text("Mark all read"),
+          ),
+          const SizedBox(height: 12),
         ],
       ),
     );
   }
-}
 
-class NotificationItem {
-  final String title;
-  final String message;
-  bool isRead;
+  Widget _buildTabBar() {
+    final tabs = ['All', 'Unread', 'Read'];
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: tabs.map((tab) {
+          final selected = filter == tab;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => filter = tab),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: selected ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  tab,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: selected ? Colors.black : Colors.grey,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
 
-  NotificationItem({
-    required this.title,
-    required this.message,
-    this.isRead = false,
-  });
+  Widget _buildNotificationCard(NotificationItem item) {
+    return Card(
+      color: AppColors.white,
+      // color: !item.isRead?AppColors.white:AppColors.grey.withOpacity(0.5),
+      elevation: 3,
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: AppColors.brandColor.withOpacity(0.2)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.circle, size: 10, color: item.isRead ? Colors.transparent : Colors.blue),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Text(item.message, style: const TextStyle(fontSize: 13, color: Colors.black87)),
+                  const SizedBox(height: 4),
+                  Text(
+                    DateFormat.yMMMd().add_jm().format(item.date),
+                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
 }

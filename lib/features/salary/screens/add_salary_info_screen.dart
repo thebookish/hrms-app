@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hrms_app/core/constants/app_colors.dart';
+import 'package:hrms_app/core/services/notification_service.dart';
 import 'package:hrms_app/core/services/salary_services.dart';
 
 class AddSalaryInfoScreen extends StatefulWidget {
@@ -50,18 +51,27 @@ class _AddSalaryInfoScreenState extends State<AddSalaryInfoScreen> {
 
     try {
       await SalaryService().addSalaryInfo(salaryData);
+
+      // ✅ Send notification to employee
+      await NotificationService().sendNotification(
+        title: 'New Salary Info Added',
+        message: 'Your salary details have been updated. Check now.',
+        receiverEmail: widget.employeeEmail!,
+      );
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Salary info added successfully')),
+          const SnackBar(content: Text('Salary info added')),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(content: Text('Something went wrong!')),
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

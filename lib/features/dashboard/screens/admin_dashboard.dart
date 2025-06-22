@@ -89,7 +89,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                 // const SizedBox(height: 16),
                 ScheduleCard(),
                 const SizedBox(height: 16),
-               AdminQuickActionsSection(),
+               const AdminQuickActionsSection(),
                 const SizedBox(height: 24),
               ],
             ),

@@ -113,6 +113,32 @@ class AuthService {
     }
     return null;
   }
+  Future<void> changePassword({
+    required String email,
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    final url = Uri.parse('${ApiEndpoints.baseUrl}/auth/change-password');
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email,
+        'oldPassword': oldPassword,
+        'newPassword': newPassword,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to change password: ${response.body}');
+    }
+  }
+
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token'); // Remove the stored token
+  }
 }
 
 
