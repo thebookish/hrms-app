@@ -27,10 +27,11 @@ class _EmployeeTabScreenState extends ConsumerState<EmployeeTabScreen> {
     return Column(
       children: [
         const SizedBox(height: 12),
+        // — Search bar
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: TextField(
-            onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
+            onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
             decoration: InputDecoration(
               hintText: 'Search employee by name...',
               prefixIcon: const Icon(Icons.search),
@@ -44,6 +45,7 @@ class _EmployeeTabScreenState extends ConsumerState<EmployeeTabScreen> {
           ),
         ),
         const SizedBox(height: 8),
+        // — Toggle chips
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -63,15 +65,17 @@ class _EmployeeTabScreenState extends ConsumerState<EmployeeTabScreen> {
             ),
           ],
         ),
+
         const SizedBox(height: 12),
+        // — List
         Expanded(
           child: employeeAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(child: Text('Error: $e')),
             data: (employees) {
               final filtered = employees.where((e) {
-                final name = e.fullName ?? '';
-                return name.toLowerCase().contains(_searchQuery);
+                final name = "${e.firstName} ${e.surname}".toLowerCase();
+                return name.contains(_searchQuery);
               }).toList();
 
               if (filtered.isEmpty) {
@@ -79,58 +83,160 @@ class _EmployeeTabScreenState extends ConsumerState<EmployeeTabScreen> {
               }
 
               return RefreshIndicator(
-                onRefresh: () async {
-                  ref.invalidate(provider);
-                },
+                onRefresh: () async => ref.invalidate(provider),
                 child: ListView.builder(
                   physics: const AlwaysScrollableScrollPhysics(),
                   itemCount: filtered.length,
-                  itemBuilder: (_, index) {
-                    final emp = filtered[index];
-                    final name = emp.fullName?.trim().isNotEmpty == true
-                        ? emp.fullName!
-                        : 'Unnamed';
-                    final contact = emp.phone ?? 'No contact';
+                  itemBuilder: (_, idx) {
+                    final emp = filtered[idx];
+                    final firstName =
+                    "${emp.firstName ?? ''} ${emp.surname ?? ''}".trim();
                     final status = emp.status ?? 'unknown';
 
-                    return status == 'approved'
-                        ? _buildApprovedCard(emp)
-                        : Card(
+                    if (status.toLowerCase() != 'approved') {
+                      return Card(
+                        color: AppColors.white,
+                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: AppColors.brandColor,
+                            child: Text(
+                              firstName.isNotEmpty ? firstName[0].toUpperCase() : '?',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ),
+                          title: Text(firstName, style: const TextStyle(color: AppColors.brandColor)),
+                          subtitle: Text('Status: ${status.toUpperCase()}'),
+                          onTap: () {
+                            if (status.toLowerCase() == 'pending') {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => PendingEmployeeDetailsScreen(employee: emp),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      );
+                    }
+
+                    // — Approved card
+                    return Card(
                       color: AppColors.white,
                       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: AppColors.brandColor,
-                          child: Text(
-                            name.isNotEmpty ? name[0].toUpperCase() : '?',
-                            style: const TextStyle(color: AppColors.white),
-                          ),
-                        ),
-                        title: Text(name, style: const TextStyle(color: AppColors.brandColor)),
-                        subtitle: Text('Contact: $contact'),
-                        trailing: Text(
-                          status.toUpperCase(),
-                          style: TextStyle(
-                            color: status == 'pending'
-                                ? Colors.orange
-                                : status == 'declined'
-                                ? Colors.red
-                                : Colors.green,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                        onTap: () {
-                          if (status == 'pending') {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => PendingEmployeeDetailsScreen(employee: emp),
+                      elevation: 3,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          children: [
+                            // — Avatar
+                            CircleAvatar(
+                              radius: 28,
+                              backgroundColor: AppColors.brandColor.withOpacity(0.8),
+                              child: Text(
+                                firstName.isNotEmpty ? firstName[0].toUpperCase() : '?',
+                                style: const TextStyle(fontSize: 20, color: Colors.white),
                               ),
-                            );
-                          }
-                        },
+                            ),
+                            const SizedBox(width: 12),
+
+                            // — Details section
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Row with name & join date
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(firstName,
+                                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                      Text(
+                                        "Joined: ${emp.joinDate ?? 'N/A'}",
+                                        style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  // Position tag
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.brandColor.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(emp.position ?? '—',
+                                        style: const TextStyle(
+                                            fontSize: 12,
+                                            color: AppColors.brandColor,
+                                            fontWeight: FontWeight.w500)),
+                                  ),
+                                  const SizedBox(height: 12),
+
+                                  // Two-column details
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            _detailRow("DOB:", emp.dob ?? '—'),
+                                            _detailRow("Gender:", emp.gender ?? '—'),
+                                            _detailRow("Sick Leave:", '${emp.sickLeave ?? 0}'),
+                                          ],
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            _detailRow("Contact:", emp.mobile ?? '—'),
+                                            _detailRow("Nationality:", emp.presentAddress ?? '—'),
+                                            _detailRow("Casual Leave:", '${emp.casualLeave ?? 0}'),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  // Leave balances
+                                  Row(
+                                    children: [
+                                      _leaveBalanceCircle(emp.paidLeave ?? 0, 'Paid'),
+                                      const SizedBox(width: 12),
+                                      _leaveBalanceCircle(emp.sickLeave ?? 0, 'Sick'),
+                                      const SizedBox(width: 12),
+                                      _leaveBalanceCircle(emp.casualLeave ?? 0, 'Casual'),
+                                    ],
+                                  ),
+
+                                  // Edit button
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: TextButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => EditEmployeeScreen(employee: emp),
+                                          ),
+                                        );
+                                      },
+                                      child: const Text('EDIT',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              color: AppColors.brandColor)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -143,138 +249,27 @@ class _EmployeeTabScreenState extends ConsumerState<EmployeeTabScreen> {
     );
   }
 
-  Widget _buildApprovedCard(emp) {
-    final name = emp.fullName ?? 'Unnamed';
-    final endDate = emp.endDate ?? 'Unknown';
-    final position = emp.jobType ?? 'Employee';
-    final salary = emp.salary ?? 'N/A';
-    final dob = emp.dob ?? 'N/A';
-    final gender = emp.gender ?? 'N/A';
-    final contact = emp.phone ?? 'N/A';
-    final emergency = emp.emergency ?? 'N/A';
-    final address = emp.nationality ?? 'N/A';
-
-    return Card(
-      color: AppColors.white,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Profile Initial
-            CircleAvatar(
-              radius: 28,
-              backgroundColor: AppColors.brandColor.withOpacity(0.8),
-              child: Text(
-                name[0].toUpperCase(),
-                style: const TextStyle(fontSize: 20, color: Colors.white),
-              ),
-            ),
-            const SizedBox(width: 12),
-
-            // Info Section
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Name & Join Date
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      Text("Joined on\n$endDate",
-                          textAlign: TextAlign.right,
-                          style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-
-                  // Role/Title Tag
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.brandColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(position,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.brandColor,
-                          fontWeight: FontWeight.w500,
-                        )),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Details
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _detailRow("Salary", "$salary AED"),
-                            _detailRow("DOB", dob),
-                            _detailRow("Gender", gender),
-                            // _detailRow("Emergency:", emergency),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _detailRow("Contact", contact),
-                            _detailRow("Address", address),
-                          ],
-                        ),
-                      ),
-
-                    ],
-                  ),
-
-                  const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => EditEmployeeScreen(employee: emp),
-                          ),
-                        );
-                      },
-                      child: const Text("EDIT", style: TextStyle(fontWeight: FontWeight.w500, color: AppColors.brandColor)),
-                    ),
-                  )
-                ],
-              ),
-            )
-          ],
-        ),
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Text(
+        '$label $value',
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
       ),
     );
   }
 
-  Widget _detailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("$label: ",
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-          Expanded(
-            child: Text(value,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400)),
-          ),
-        ],
-      ),
+  Widget _leaveBalanceCircle(int count, String type) {
+    return Column(
+      children: [
+        CircleAvatar(
+          radius: 20,
+          backgroundColor: AppColors.primary.withOpacity(0.1),
+          child: Text('$count', style: const TextStyle(color: AppColors.primary)),
+        ),
+        const SizedBox(height: 4),
+        Text(type, style: const TextStyle(fontSize: 12)),
+      ],
     );
   }
 }

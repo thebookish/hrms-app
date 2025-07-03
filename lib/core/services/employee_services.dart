@@ -34,10 +34,8 @@ class EmployeeService {
     );
     if (response.statusCode == 200) {
       return EmployeeModelNew.fromJson(jsonDecode(response.body));
-    } else if(response.statusCode == 404){
+    } else {
       throw Exception("User not found");
-    }else{
-      throw Exception("Something went wrong!");
     }
   }
   Future<EmployeeModel> updateEmployeeProfile({

@@ -50,7 +50,7 @@ class _ApprovedEmployeeListScreenState extends ConsumerState<EmployeeListScreenS
               error: (e, _) => Center(child: Text('Error: $e')),
               data: (employees) {
                 final filtered = employees.where((e) {
-                  final name = (e.fullName ?? '').toLowerCase();
+                  final name = (e.firstName ?? '').toLowerCase();
                   return name.contains(_searchQuery);
                 }).toList();
 
@@ -63,8 +63,8 @@ class _ApprovedEmployeeListScreenState extends ConsumerState<EmployeeListScreenS
                   itemCount: filtered.length,
                   itemBuilder: (_, index) {
                     final emp = filtered[index];
-                    final name = emp.fullName ?? 'Unnamed';
-                    final position = emp.jobType ?? 'Employee';
+                    final name = emp.firstName ?? 'Unnamed';
+                    final position = emp.position ?? 'Employee';
 
                     return Card(
                       color: AppColors.white,

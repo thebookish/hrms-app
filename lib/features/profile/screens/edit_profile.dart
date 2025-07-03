@@ -46,7 +46,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     return employeeAsync.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Scaffold(body: Center(child: Text('Error: $e'))),
+      error: (e, _) => Scaffold(body: Center(child: Text('Something went wrong!'))),
       data: (employee) {
         _nameController = TextEditingController(text: employee.name);
         _phoneController = TextEditingController(text: employee.phone);
@@ -131,7 +131,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     }
                   } catch (e) {
                     ScaffoldMessenger.of(context)
-                        .showSnackBar(SnackBar(content: Text('Error: $e')));
+                        .showSnackBar(SnackBar(content: Text('Something went wrong!')));
                   } finally {
                     setState(() => _isLoading = false);
                   }

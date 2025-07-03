@@ -47,19 +47,19 @@ class _EmployeeReportScreenState extends State<EmployeeReportScreen> {
         build: (context) => [
           pw.Header(level: 0, child: pw.Text('Employee Report', style: pw.TextStyle(fontSize: 24))),
           _buildSection('Personal Information', [
-            'Name: ${employee.fullName}',
+            'Name: ${employee.firstName}',
             'Email: ${employee.email}',
-            'Phone: ${employee.phone}',
+            'Phone: ${employee.mobile}',
             'DOB: ${employee.dob}',
             'Gender: ${employee.gender}',
-            'Nationality: ${employee.nationality}',
+            'Nationality: ${employee.presentAddress}',
           ]),
           _buildSection('Job Details', [
             'Sponsor: ${employee.sponsor}',
-            'Job Type: ${employee.jobType}',
-            'Join-End: ${employee.endDate}',
+            'Job Type: ${employee.position}',
+            'Join-End: ${employee.joinDate}',
             'Bank: ${employee.bank}',
-            'Salary: ${employee.salary}',
+            // 'Salary: ${employee.}',
           ]),
           _buildSection('Leave Summary', [
             'Sick Leave: ${employee.sickLeave}',
@@ -211,27 +211,27 @@ class _EmployeeReportScreenState extends State<EmployeeReportScreen> {
         child: ListView(
           children: [
             _sectionCard(title: 'Personal Information', children: [
-              _infoRow('Name', employee?.fullName, icon: Icons.person),
+              _infoRow('Name', employee?.firstName, icon: Icons.person),
               _infoRow('Email', employee?.email, icon: Icons.email),
-              _infoRow('Phone', employee?.phone, icon: Icons.phone),
+              _infoRow('Phone', employee?.mobile, icon: Icons.phone),
               _infoRow('DOB', employee?.dob, icon: Icons.cake),
               _infoRow('Gender', employee?.gender),
-              _infoRow('Nationality', employee?.nationality),
+              _infoRow('Nationality', employee?.permanentAddress),
             ]),
 
             _sectionCard(title: 'Job Details', children: [
               _infoRow('Sponsor', employee?.sponsor),
-              _infoRow('Job Type', employee?.jobType),
-              _infoRow('Join-End', employee?.endDate),
+              _infoRow('Job Type', employee?.position),
+              _infoRow('Join-End', employee?.joinDate),
               _infoRow('Bank', employee?.bank),
-              _infoRow('Salary', employee?.salary),
+              // _infoRow('Salary', employee?.salary),
             ]),
 
             _sectionCard(title: 'Family & Emergency', children: [
-              _infoRow('Family', employee?.family),
+              // _infoRow('Family', employee?.),
               _infoRow('Emergency Contact', employee?.emergency),
-              _infoRow('Passport', employee?.passport),
-              _infoRow('ID', employee?.id),
+              // _infoRow('Passport', employee?.passport),
+              // _infoRow('ID', employee?.eid),
             ]),
 
             _sectionCard(title: 'Leave Summary', children: leaveRow),

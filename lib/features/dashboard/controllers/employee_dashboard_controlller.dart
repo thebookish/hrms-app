@@ -20,6 +20,7 @@ final employeeDataProvider = FutureProvider<EmployeeModelNew>((ref) async {
   try {
     return await EmployeeService().getEmployeeDataByEmail(user!.email);
   } catch (e) {
+    print('eee: '+e.toString());
     if (e.toString().contains('User not found')) {
       return EmployeeModelNew(status: 'pending'); // or 'pending'
     }

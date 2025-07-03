@@ -4,6 +4,7 @@ import 'package:hrms_app/features/dashboard/controllers/employee_dashboard_contr
 import 'package:hrms_app/features/employee_management/screens/verify_employee_screen.dart';
 import 'package:hrms_app/features/profile/controllers/employee_status_provider.dart';
 import 'package:hrms_app/features/profile/screens/edit_profile.dart';
+import 'package:hrms_app/features/settings/providers/theme_provider.dart';
 import '../../../core/constants/app_colors.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -23,7 +24,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final employeeAsync = ref.watch(employeeProvider);
     final employeeStatus = ref.watch(currentEmployeeStatusProvider);
-
+    final themeMode = ref.read(themeModeProvider.notifier).state;
 
     return Scaffold(
       body: RefreshIndicator(
@@ -51,11 +52,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       : Container(
                     width: 120,
                     height: 120,
-                    color: AppColors.brandColor,
+                    color: themeMode==ThemeMode.dark?AppColors.white:AppColors.brandColor,
                     alignment: Alignment.center,
                     child: Text(
                       employee.name.isNotEmpty ? employee.name[0].toUpperCase() : '?',
-                      style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: themeMode==ThemeMode.dark?AppColors.brandColor:AppColors.white,),
                     ),
                   ),
                 ),
@@ -66,11 +67,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 child: Column(
                   children: [
                     Text(employee.name,
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.brandColor)),
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: themeMode==ThemeMode.dark?AppColors.white:AppColors.brandColor,)),
                     const SizedBox(height: 4),
                     Text(
                       '${employee.position} • ${employee.department}',
-                      style: const TextStyle(color: Colors.grey),
+                      style:  TextStyle(color: AppColors.grey,),
                     ),
                   ],
                 ),
@@ -83,13 +84,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               const SizedBox(height: 20),
               const Divider(),
-              _sectionItem(context, icon: Icons.call, title: "Mobile", description: employee.phone.isNotEmpty ? employee.phone : "No number provided."),
-              _sectionItem(context, icon: Icons.attach_email_outlined, title: "Contact Email", description: employee.email.isNotEmpty ? employee.email : "Not specified."),
-              _sectionItem(context, icon: Icons.work_outline, title: "Position", description: employee.position.isNotEmpty ? employee.position : "Not specified."),
-              _sectionItem(context, icon: Icons.group_work, title: "Department", description: employee.department.isNotEmpty ? employee.department : "Not specified."),
+              _sectionItem(context, icon: Icons.call, title: "Mobile", description: employee.phone.isNotEmpty ? employee.phone : "No number provided.", themeMode: themeMode),
+              _sectionItem(context, icon: Icons.attach_email_outlined, title: "Contact Email", description: employee.email.isNotEmpty ? employee.email : "Not specified.",themeMode: themeMode),
+              _sectionItem(context, icon: Icons.work_outline, title: "Position", description: employee.position.isNotEmpty ? employee.position : "Not specified.",themeMode: themeMode),
+              _sectionItem(context, icon: Icons.group_work, title: "Department", description: employee.department.isNotEmpty ? employee.department : "Not specified.",themeMode: themeMode),
 
               const SizedBox(height: 16),
-              employeeStatus.toLowerCase() != 'pending' && employeeStatus.toLowerCase() != 'approved'
+           employeeStatus.toLowerCase() != 'approved'
                   ? Center(
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.verified_user_outlined),
@@ -116,19 +117,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _sectionItem(BuildContext context,
-      {required IconData icon, required String title, required String description}) {
+      {required IconData icon, required String title, required String description, required themeMode}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12.0),
       child: Column(
         children: [
           Row(
             children: [
-              Icon(icon, size: 24, color: AppColors.brandColor),
+              Icon(icon, size: 24, color: themeMode==ThemeMode.dark?AppColors.white:AppColors.brandColor,),
               const SizedBox(width: 8),
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.brandColor)),
+              Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color:themeMode==ThemeMode.dark?AppColors.white:AppColors.brandColor)),
               const Spacer(),
               IconButton(
-                icon: const Icon(Icons.edit, size: 20, color: AppColors.brandColor),
+                icon: Icon(Icons.edit, size: 20, color: themeMode==ThemeMode.dark?AppColors.white:AppColors.brandColor),
                 onPressed: () {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
                 },
@@ -139,7 +140,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             padding: const EdgeInsets.only(left: 32, right: 4),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Text(description, style: const TextStyle(color: Colors.black87, fontSize: 14)),
+              child: Text(description, style: TextStyle(color: themeMode==ThemeMode.dark?AppColors.white:AppColors.brandColor, fontSize: 14)),
             ),
           ),
           const Divider(height: 32),

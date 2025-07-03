@@ -1,13 +1,13 @@
 class JobInfoModel {
   final String title;
   final String department;
-  final String supervisor;
+  // final String supervisor;
   final List<String> history;
 
   JobInfoModel({
     required this.title,
     required this.department,
-    required this.supervisor,
+    // required this.supervisor,
     required this.history,
   });
 
@@ -15,7 +15,7 @@ class JobInfoModel {
     return JobInfoModel(
       title: json['title'] ?? '',
       department: json['department'] ?? '',
-      supervisor: json['supervisor'] ?? '',
+      // supervisor: json['supervisor'] ?? '',
       history: List<String>.from(json['history'] ?? []),
     );
   }

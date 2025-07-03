@@ -1,14 +1,20 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:hrms_app/core/constants/api_endpoints.dart';
 import 'package:hrms_app/core/constants/app_colors.dart';
+import 'package:hrms_app/core/services/storage_service.dart';
 import 'package:hrms_app/features/auth/controllers/user_provider.dart';
 import 'package:hrms_app/features/auth/screens/forgot_password_screen.dart';
 import 'package:hrms_app/features/dashboard/screens/admin_dashboard.dart';
 import 'package:hrms_app/features/dashboard/screens/employee_dashboard.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/models/user_model.dart';
 import 'signup_screen.dart';
+import 'package:http/http.dart' as http;
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -20,7 +26,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _storage = const FlutterSecureStorage();
+  // final _storage = const FlutterSecureStorage();
   bool _obscurePassword = true;
   bool _isLoading = false;
 
@@ -50,12 +56,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (user != null) {
         ref.read(loggedInUserProvider.notifier).state = user;
           // Save user info or token securely
-          await _storage.write(key: 'userEmail', value: user.email);
-          await _storage.write(key: 'userRole', value: user.role);
-          await _storage.write(key: 'userName', value: user.name);
+          await SecureStorageService().write('userEmail', user.email);
+          await SecureStorageService().write('userRole',  user.role);
+          await SecureStorageService().write('userName', user.name);
           // or if you have an auth token:
           // await _storage.write(key: 'authToken', value: token);
+        // ✅ Get Player ID from OneSignal
+        final playerId = await OneSignal.User.getOnesignalId();
 
+
+        // ✅ Send to backend
+        if (playerId != null && user.email != null) {
+          final url = Uri.parse('${ApiEndpoints.baseUrl}/notifications/player-id');
+          await http.post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': user.email, 'playerId': playerId}),
+          );
+        }
 
         // ✅ Check user role
         if (user.role.toLowerCase() == 'admin') {

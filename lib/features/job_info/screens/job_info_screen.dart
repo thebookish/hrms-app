@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hrms_app/core/constants/app_colors.dart';
 import 'package:hrms_app/core/services/task_services.dart';
+import 'package:hrms_app/features/dashboard/controllers/employee_dashboard_controlller.dart';
 import 'package:hrms_app/features/job_info/model/job_info_model.dart';
 import 'package:hrms_app/features/job_info/model/task_model.dart';
 import 'package:hrms_app/features/auth/controllers/user_provider.dart';
+import 'package:hrms_app/features/settings/providers/theme_provider.dart';
 import 'package:intl/intl.dart';
 
 class JobInfoScreen extends ConsumerStatefulWidget {
@@ -28,22 +30,29 @@ class _JobInfoScreenState extends ConsumerState<JobInfoScreen> {
 
   Future<void> _loadJobInfo() async {
     try {
-      final user = ref.read(loggedInUserProvider)!;
-      final loadedTasks = await TaskService().getUserTasks(user.email);
-      // Example static job info; replace with your API call later
-      jobInfo = JobInfoModel(
-        title: 'Software Engineer',
-        department: 'Product Dev',
-        supervisor: 'Jane Smith',
-        history: [
-          'Joined on March 1, 2022',
-          'Promoted Mar 1, 2023',
-          'Assigned Project Phoenix May 2024',
-        ],
-      );
-      setState(() {
-        tasks = loadedTasks;
-        isLoading = false;
+      final employeeAsync = ref.read(employeeDataProvider);
+
+      employeeAsync.whenData((employee) async {
+        final loadedTasks = await TaskService().getUserTasks(employee.email??'');
+
+        jobInfo = JobInfoModel(
+          title: employee.position ?? 'N/A',
+          department: employee.wing ?? 'N/A',
+          // supervisor: employee.sponsor ?? 'N/A',
+          history: [
+            if (employee.joinDate != null)
+              'Joined on ${DateFormat.yMMMMd().format(DateTime.parse(employee.joinDate!))}',
+            if (employee.retireDate != null)
+              'Retirement Date: ${DateFormat.yMMMMd().format(DateTime.parse(employee.retireDate!))}',
+            if (employee.homeLocal != null && employee.homeLocal!.isNotEmpty)
+              'Home/Local: ${employee.homeLocal}',
+          ],
+        );
+
+        setState(() {
+          tasks = loadedTasks;
+          isLoading = false;
+        });
       });
     } catch (e) {
       setState(() {
@@ -51,9 +60,11 @@ class _JobInfoScreenState extends ConsumerState<JobInfoScreen> {
         isLoading = false;
       });
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error loading: $e')));
+          .showSnackBar(SnackBar(content: Text('Error loading job info: $e')));
     }
   }
+
+
 
   Future<void> _toggleTaskCompletion(String id) async {
     final user = ref.read(loggedInUserProvider)!;
@@ -79,6 +90,7 @@ class _JobInfoScreenState extends ConsumerState<JobInfoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeMode = ref.read(themeModeProvider.notifier).state;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Job Info & Tasks'),
@@ -91,51 +103,51 @@ class _JobInfoScreenState extends ConsumerState<JobInfoScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
-            _sectionTitle('Position Details'),
+            _sectionTitle('Position Details',themeMode),
             _infoCard([
-              _buildInfoTile(Icons.work_outline, 'Title', jobInfo.title),
-              _buildInfoTile(Icons.apartment, 'Department', jobInfo.department),
-              _buildInfoTile(Icons.supervisor_account, 'Supervisor', jobInfo.supervisor),
-            ]),
+              _buildInfoTile(Icons.work_outline, 'Title', jobInfo.title,themeMode),
+              _buildInfoTile(Icons.apartment, 'Department', jobInfo.department,themeMode),
+              // _buildInfoTile(Icons.supervisor_account, 'Supervisor', jobInfo.supervisor),
+            ],themeMode),
             const SizedBox(height: 24),
-            _sectionTitle('Employment History'),
-            _historyCard(jobInfo.history),
+            _sectionTitle('Employment History',themeMode),
+            _historyCard(jobInfo.history,themeMode),
             const SizedBox(height: 24),
-            _sectionTitle('Assigned Tasks'),
-            ...tasks.map((t) => _buildTaskCard(t)).toList(),
+            _sectionTitle('Assigned Tasks',themeMode),
+            ...tasks.map((t) => _buildTaskCard(t,themeMode)).toList(),
           ],
         ),
       ),
     );
   }
-  Widget _sectionTitle(String text) {
+  Widget _sectionTitle(String text, themeMode) {
     return Text(
       text,
-      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.brandColor),
+      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: themeMode==ThemeMode.dark?AppColors.white:AppColors.brandColor),
     );
   }
 
-  Widget _infoCard(List<Widget> children) {
+  Widget _infoCard(List<Widget> children,themeMode) {
     return Card(
-      color: AppColors.white,
+      color:themeMode==ThemeMode.dark?Colors.white12:AppColors.white,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Column(children: children),
     );
   }
 
-  Widget _buildInfoTile(IconData icon, String label, String value) {
+  Widget _buildInfoTile(IconData icon, String label, String value,themeMode) {
     return ListTile(
-      leading: Icon(icon, color: AppColors.brandColor),
-      title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(value, style: const TextStyle(fontSize: 15)),
+      leading: Icon(icon, color: themeMode==ThemeMode.dark?Colors.white:AppColors.brandColor,),
+      title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, )),
+      subtitle: Text(value, style: const TextStyle(fontSize: 15,)),
     );
   }
 
-  Widget _historyCard(List<String> history) {
+  Widget _historyCard(List<String> history,themeMode) {
     return Card(
       elevation: 2,
-      color: Colors.white,
+      color: themeMode==ThemeMode.dark?Colors.white12:AppColors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
@@ -156,7 +168,7 @@ class _JobInfoScreenState extends ConsumerState<JobInfoScreen> {
     );
   }
 
-  Widget _buildTaskCard(TaskModel task) {
+  Widget _buildTaskCard(TaskModel task,themeMode) {
     Color priorityColor;
     switch (task.priority) {
       case 'High':
@@ -170,7 +182,7 @@ class _JobInfoScreenState extends ConsumerState<JobInfoScreen> {
     }
 
     return Card(
-      color: AppColors.white,
+      color: themeMode==ThemeMode.dark?Colors.white12:AppColors.white,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -235,13 +247,13 @@ class _JobInfoScreenState extends ConsumerState<JobInfoScreen> {
             const SizedBox(height: 12),
             LinearProgressIndicator(
               value: task.isCompleted ? 1.0 : 0.5,
-              color: AppColors.brandColor,
+              color: themeMode==ThemeMode.dark?Colors.green:AppColors.brandColor,
               backgroundColor: Colors.grey[300],
             ),
             Row(
               children: [
                 Checkbox(
-                  activeColor: AppColors.brandColor,
+                  activeColor: themeMode==ThemeMode.dark?Colors.white12:AppColors.brandColor,
                   value: task.isCompleted,
                   onChanged: (_) => _toggleTaskCompletion(task.id),
                 ),

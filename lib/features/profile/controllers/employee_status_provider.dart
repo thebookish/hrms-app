@@ -23,6 +23,11 @@ final currentEmployeeStatusProvider = Provider<String>((ref) {
         status = 'pending';
       }
     });
+    pendingAsync.whenData((list) {
+      if (list.any((e) => e.email?.trim() == email)) {
+        status = 'declined';
+      }
+    });
   });
 
   return status;

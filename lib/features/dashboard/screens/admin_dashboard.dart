@@ -46,10 +46,10 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
         title: const Text('Dashboard',
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         centerTitle: true,
-        actions: const [
-          Icon(Icons.notifications_none, color: Colors.white),
-          SizedBox(width: 16),
-        ],
+        // actions: const [
+        //   Icon(Icons.notifications_none, color: Colors.white),
+        //   SizedBox(width: 16),
+        // ],
         leading: const Padding(
           padding: EdgeInsets.only(left: 16),
           child: Icon(Icons.dashboard_customize_outlined, color: Colors.white),

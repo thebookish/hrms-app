@@ -5,9 +5,11 @@ import 'package:hrms_app/features/dashboard/controllers/employee_dashboard_contr
 import 'package:hrms_app/features/job_info/screens/job_info_screen.dart';
 import 'package:hrms_app/features/leave_management/screens/leave_screen.dart';
 import 'package:hrms_app/features/notifications/screens/notifcation_screen.dart';
+import 'package:hrms_app/features/profile/screens/approved_employee_for_family.dart';
 import 'package:hrms_app/features/profile/screens/family_members_details.dart';
 import 'package:hrms_app/features/profile/screens/view_profile.dart';
 import 'package:hrms_app/features/salary/screens/salary_info_screen.dart';
+import 'package:hrms_app/features/settings/providers/theme_provider.dart';
 import 'package:hrms_app/features/settings/screens/settings_screen.dart';
 import 'package:hrms_app/features/sponsor/screens/sponsor_details_screen.dart';
 
@@ -28,6 +30,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
   @override
   Widget build(BuildContext context) {
     final employeeAsync = ref.watch(employeeDataProvider);
+    final themeMode = ref.read(themeModeProvider.notifier).state;
 
     return employeeAsync.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
@@ -56,9 +59,22 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
       ),
 
       data: (employee) => Scaffold(
-        backgroundColor: const Color(0xFFF7F8FA),
+        backgroundColor: themeMode==ThemeMode.dark?Colors.black45:Color(0xFFF7F8FA),
+
         appBar: AppBar(
           backgroundColor: AppColors.brandColor,
+          elevation: 0,
+          title: const Text('Dashboard',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          centerTitle: true,
+          // actions: const [
+          //   Icon(Icons.notifications_none, color: Colors.white),
+          //   SizedBox(width: 16),
+          // ],
+          leading: const Padding(
+            padding: EdgeInsets.only(left: 16),
+            child: Icon(Icons.dashboard_customize_outlined, color: Colors.white),
+          ),
         ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -80,32 +96,38 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
                             title: 'My Profile',
                             icon: Icons.person_outline,
                             color: Colors.indigo,
-                            status: employee.status ?? ''),
+                            status: employee.status ?? '',
+                        themeMode: themeMode,),
                         _DashboardCard(
                             title: 'Job Info',
                             icon: Icons.work_outline,
                             color: Colors.deepPurple,
-                            status: employee.status ?? ''),
+                            status: employee.status ?? '',
+                          themeMode: themeMode,),
                         _DashboardCard(
                             title: 'Leave Management',
                             icon: Icons.beach_access,
                             color: Colors.teal,
-                            status: employee.status ?? ''),
+                            status: employee.status ?? '',
+                          themeMode: themeMode,),
                         _DashboardCard(
                             title: 'Salary & Bank Info',
                             icon: Icons.account_balance_wallet_outlined,
                             color: Colors.green,
-                            status: employee.status ?? ''),
+                            status: employee.status ?? '',
+                          themeMode: themeMode,),
                         _DashboardCard(
                             title: 'Family Members',
                             icon: Icons.family_restroom,
                             color: Colors.orange,
-                            status: employee.status ?? ''),
+                            status: employee.status ?? '',
+                          themeMode: themeMode,),
                         _DashboardCard(
                             title: 'Sponsor Details',
                             icon: Icons.handshake_outlined,
                             color: Colors.blueGrey,
-                            status: employee.status ?? ''),
+                            status: employee.status ?? '',
+                          themeMode: themeMode,),
                       ],
                     ),
                   ),
@@ -163,16 +185,19 @@ class _DashboardCard extends StatelessWidget {
   final IconData icon;
   final MaterialColor color;
   final String status;
+  final ThemeMode themeMode;
 
   const _DashboardCard({
     required this.title,
     required this.icon,
     required this.color,
     required this.status,
+    required this.themeMode
   });
 
   @override
   Widget build(BuildContext context) {
+
     final isRestricted =
         title != 'My Profile' && title != 'Settings' && status.toLowerCase() != 'approved';
 
@@ -214,7 +239,7 @@ class _DashboardCard extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              color: AppColors.white,
+              color: themeMode==ThemeMode.dark?Colors.white12:AppColors.white,
               boxShadow: const [
                 BoxShadow(
                   color: Colors.black12,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hrms_app/core/services/notification_service.dart';
 import 'package:hrms_app/features/auth/controllers/user_provider.dart';
 import 'package:hrms_app/features/notifications/controllers/notification_provider.dart';
+import 'package:hrms_app/features/settings/providers/theme_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:hrms_app/core/constants/app_colors.dart';
 import 'package:hrms_app/features/notifications/model/notification_model.dart';
@@ -22,6 +23,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   Widget build(BuildContext context) {
     final user = ref.watch(loggedInUserProvider);
     final notificationsAsync = ref.watch(notificationsProvider);
+    final themeMode = ref.read(themeModeProvider.notifier).state;
 
     return Scaffold(
       // appBar: AppBar(
@@ -32,13 +34,13 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       // ),
       body: Column(
         children: [
-          SwitchListTile(
-            title: const Text('Push notifications', style: TextStyle(fontWeight: FontWeight.w500)),
-            value: pushEnabled,
-            onChanged: (val) => setState(() => pushEnabled = val),
-            activeColor: AppColors.brandColor,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-          ),
+          // SwitchListTile(
+          //   title: const Text('Push notifications', style: TextStyle(fontWeight: FontWeight.w500)),
+          //   value: pushEnabled,
+          //   onChanged: (val) => setState(() => pushEnabled = val),
+          //   activeColor: AppColors.brandColor,
+          //   contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+          // ),
           _buildTabBar(),
           Expanded(
             child: notificationsAsync.when(
@@ -56,7 +58,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                 return ListView.builder(
                   itemCount: filtered.length,
                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                  itemBuilder: (_, index) => _buildNotificationCard(filtered[index]),
+                  itemBuilder: (_, index) => _buildNotificationCard(filtered[index],themeMode),
                 );
               },
             ),
@@ -68,8 +70,8 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
              ref.invalidate(notificationsProvider);
             },
             style: TextButton.styleFrom(
-              foregroundColor: AppColors.brandColor,
-              side: const BorderSide(color: AppColors.brandColor),
+              foregroundColor: themeMode==ThemeMode.dark?Colors.white:AppColors.brandColor,
+              side: BorderSide(color: themeMode==ThemeMode.dark?Colors.white:AppColors.brandColor,),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
@@ -119,9 +121,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     );
   }
 
-  Widget _buildNotificationCard(NotificationItem item) {
+  Widget _buildNotificationCard(NotificationItem item,themeMode) {
     return Card(
-      color: AppColors.white,
+      color: themeMode==ThemeMode.dark?Colors.white12:AppColors.white,
       // color: !item.isRead?AppColors.white:AppColors.grey.withOpacity(0.5),
       elevation: 3,
       shape: RoundedRectangleBorder(
@@ -141,7 +143,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                 children: [
                   Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text(item.message, style: const TextStyle(fontSize: 13, color: Colors.black87)),
+                  Text(item.message, style: TextStyle(fontSize: 13, color: themeMode==ThemeMode.dark?Colors.white:Colors.black87,)),
                   const SizedBox(height: 4),
                   Text(
                     DateFormat.yMMMd().add_jm().format(item.date),

@@ -23,12 +23,13 @@ class SettingsScreen extends ConsumerWidget {
         children: [
           const Text('App Preferences', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ListTile(
-            title: const Text('Dark Mode'),
+            title: const Text('Light Mode'),
             trailing: Switch(
-              value: themeMode == ThemeMode.dark,
-              onChanged: (val) {
-                ref.read(themeModeProvider.notifier).state =
-                val ? ThemeMode.dark : ThemeMode.light;
+              value: themeMode == ThemeMode.light,
+              onChanged: (val) async {
+                final newMode = val ? ThemeMode.light : ThemeMode.dark;
+                ref.read(themeModeProvider.notifier).state = newMode;
+                await saveThemeMode(newMode); // Persist user selection
               },
             ),
           ),
@@ -45,17 +46,19 @@ class SettingsScreen extends ConsumerWidget {
               );
             },
           ),
+
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text('Logout'),
             onTap: () async {
               await AuthService().logout();
-              // Remove all previous routes and redirect to login
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-                    (route) => false,
-              );
+              if (context.mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      (route) => false,
+                );
+              }
             },
           ),
         ],

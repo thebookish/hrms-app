@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:hrms_app/core/services/storage_service.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../core/constants/api_endpoints.dart';
@@ -134,9 +135,9 @@ class AuthService {
   }
 
   Future<UserModel?> getLoggedInUser() async {
-    final email = await _storage.read(key: 'userEmail');
-    final role = await _storage.read(key: 'userRole');
-    final name = await _storage.read(key: 'userName');
+    final email = await SecureStorageService().read( 'userEmail');
+    final role = await SecureStorageService().read('userRole');
+    final name = await SecureStorageService().read( 'userName');
 
     if (email != null && role != null && name != null) {
       return UserModel(email: email, role: role, name: name, id: '');
@@ -168,6 +169,7 @@ class AuthService {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token'); // Remove the stored token
+    await SecureStorageService().deleteAll();
   }
 }
 

@@ -109,8 +109,8 @@ class _AdminQuickActionsSectionState extends State<AdminQuickActionsSection> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Wrap(
-            spacing: 12,
-            runSpacing: 16,
+            spacing: 20,
+            runSpacing: 50,
             alignment: WrapAlignment.spaceBetween,
             children: items.map((item) {
               return _QuickBox(
@@ -124,28 +124,28 @@ class _AdminQuickActionsSectionState extends State<AdminQuickActionsSection> {
         const SizedBox(height: 24),
 
         // Toggle Bar
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          height: 40,
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              _ToggleTab(
-                label: 'Pending Requests',
-                isSelected: isPendingSelected,
-                onTap: () => setState(() => isPendingSelected = true),
-              ),
-              _ToggleTab(
-                label: 'Past Requests',
-                isSelected: !isPendingSelected,
-                onTap: () => setState(() => isPendingSelected = false),
-              ),
-            ],
-          ),
-        ),
+        // Container(
+        //   margin: const EdgeInsets.symmetric(horizontal: 16),
+        //   height: 40,
+        //   decoration: BoxDecoration(
+        //     color: Colors.grey[200],
+        //     borderRadius: BorderRadius.circular(12),
+        //   ),
+        //   child: Row(
+        //     children: [
+        //       _ToggleTab(
+        //         label: 'Pending Requests',
+        //         isSelected: isPendingSelected,
+        //         onTap: () => setState(() => isPendingSelected = true),
+        //       ),
+        //       _ToggleTab(
+        //         label: 'Past Requests',
+        //         isSelected: !isPendingSelected,
+        //         onTap: () => setState(() => isPendingSelected = false),
+        //       ),
+        //     ],
+        //   ),
+        // ),
       ],
     );
   }
@@ -167,8 +167,8 @@ class _QuickBox extends StatelessWidget {
         child: Column(
           children: [
             Container(
-              width: 64,
-              height: 64,
+              width: 200,
+              height: 100,
               decoration: BoxDecoration(
                 color: AppColors.brandColor.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(20),

@@ -6,6 +6,7 @@ import 'package:hrms_app/core/services/leave_services.dart';
 import 'package:hrms_app/features/auth/controllers/user_provider.dart';
 import 'package:hrms_app/features/dashboard/controllers/employee_dashboard_controlller.dart';
 import 'package:hrms_app/features/leave_management/models/leave_model.dart';
+import 'package:hrms_app/features/settings/providers/theme_provider.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
 class LeaveScreen extends ConsumerStatefulWidget {
@@ -51,6 +52,7 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
   Widget build(BuildContext context) {
     final user = ref.watch(loggedInUserProvider);
     final employeeAsync = ref.watch(employeeDataProvider);
+    final themeMode = ref.read(themeModeProvider.notifier).state;
     late String? empName;
     return Scaffold(
       backgroundColor: const Color(0xFF0E1D36),
@@ -67,16 +69,18 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
           child: Text('Error: $_error',
               style: const TextStyle(color: Colors.white)))
           : employeeAsync.when(
-        loading: () => const Center(
+        loading: () =>
+        const Center(
             child: CircularProgressIndicator(color: Colors.white)),
-        error: (err, _) => Center(
-            child: Text('Error: $err',
-                style: const TextStyle(color: Colors.white))),
+        error: (err, _) =>
+            Center(
+                child: Text('Error: $err',
+                    style: const TextStyle(color: Colors.white))),
         data: (employee) {
           final sick = employee.sickLeave ?? 0;
           final casual = employee.casualLeave ?? 0;
           final paid = employee.paidLeave ?? 0;
-          empName = employee.fullName;
+          empName = employee.firstName;
           int approvedCasual = 0;
           int approvedSick = 0;
           int approvedPaid = 0;
@@ -133,17 +137,18 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildLeaveTypeCircle("${casual - approvedCasual}", "Casual"),
+                    _buildLeaveTypeCircle(
+                        "${casual - approvedCasual}", "Casual"),
                     _buildLeaveTypeCircle("${sick - approvedSick}", "Sick"),
                     _buildLeaveTypeCircle("${paid - approvedPaid}", "Paid"),
                   ],
                 ),
                 const SizedBox(height: 16),
                 Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
+                  decoration: BoxDecoration(
+                    color: themeMode==ThemeMode.dark?Colors.black:AppColors.white,
                     borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(20)),
+                    const BorderRadius.vertical(top: Radius.circular(20)),
                   ),
                   child: Column(
                     children: [
@@ -162,9 +167,9 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
                         child: TabBarView(
                           controller: _tabController,
                           children: [
-                            _buildLeaveList(context,
+                            _buildLeaveList(context,themeMode,
                                 statusFilter: 'approved'),
-                            _buildLeaveList(context),
+                            _buildLeaveList(context,themeMode),
                           ],
                         ),
                       ),
@@ -182,7 +187,7 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text("Apply Leave", style: TextStyle(color: Colors.white)),
         onPressed: () =>
-            _showLeaveForm(context, user!.email, empName!),
+            _showLeaveForm(context, user!.email, empName!,themeMode),
       ),
     );
   }
@@ -224,7 +229,7 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
             ),
             child: Center(
                 child:
-                    Text(count, style: const TextStyle(color: Colors.white))),
+                Text(count, style: const TextStyle(color: Colors.white))),
           ),
         ),
         const SizedBox(height: 6),
@@ -233,7 +238,7 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
     );
   }
 
-  Widget _buildLeaveList(BuildContext context, {String? statusFilter}) {
+  Widget _buildLeaveList(BuildContext context,themeMode, {String? statusFilter}) {
     final filtered = statusFilter == null
         ? _leaves
         : _leaves.where((l) => l.status.toLowerCase() == statusFilter).toList();
@@ -241,7 +246,7 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
     if (filtered.isEmpty) {
       return const Center(
           child:
-              Text("No records found", style: TextStyle(color: Colors.grey)));
+          Text("No records found", style: TextStyle(color: Colors.grey)));
     }
 
     return ListView.builder(
@@ -252,12 +257,13 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.grey.shade100,
+            color:themeMode==ThemeMode.dark?Colors.white12:Colors.grey.shade100,
             borderRadius: BorderRadius.circular(10),
           ),
           child: ListTile(
             title: Text(
-              '${leave.type} \n${leave.fromDate.split("T")[0]} - ${leave.toDate.split("T")[0]}',
+              '${leave.type} \n${leave.fromDate.split("T")[0]} - ${leave.toDate
+                  .split("T")[0]}',
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
             subtitle: Text(leave.reason),
@@ -289,170 +295,229 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
     }
   }
 
-  void _showLeaveForm(BuildContext context, String email, String employeeName) {
-    final reasonController = TextEditingController();
+  void _showLeaveForm(BuildContext context, String email, String employeeName,themeMode) {
+    final toController = TextEditingController(text: 'Head of Chancery');
+    final nameController = TextEditingController(text: employeeName);
+    final subjectOptions = [
+      'Casual Leave Application',
+      'Annual Leave Application'
+    ];
+    final reasonOptions = ['Medical', 'Personal', 'Family', 'Overseas Travel'];
+    final whatsAppController = TextEditingController();
+    final emergencyContactController = TextEditingController();
+    final substituteNameController = TextEditingController();
+    final substituteContactController = TextEditingController();
+    final signatureController = TextEditingController();
+    final designationController = TextEditingController();
+    final wingController = TextEditingController();
+
+    String? selectedSubject;
+    String? selectedReason;
+    bool noSubstitute = true;
     DateTime? fromDate;
     DateTime? toDate;
 
-    String? selectedLeaveType;
-    final List<String> leaveTypes = ['Sick Leave', 'Casual Leave', 'Paid Leave'];
-
     showModalBottomSheet(
-      context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: themeMode==ThemeMode.dark?Colors.black:AppColors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      context: context,
       builder: (context) {
         return Padding(
           padding: EdgeInsets.only(
             left: 20,
             right: 20,
             top: 24,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            bottom: MediaQuery
+                .of(context)
+                .viewInsets
+                .bottom + 24,
           ),
           child: StatefulBuilder(
             builder: (context, setState) {
+              final now = DateTime.now();
+              final formattedDate = '${now.year}-${now.month.toString().padLeft(
+                  2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
               return SingleChildScrollView(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Apply for Leave',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 20),
+                    const Text("Leave Application Form",
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
 
-                    /// Leave Type Dropdown
+                    const SizedBox(height: 16),
+                    _buildTextField(toController, "To"),
+
+                    _buildTextField(nameController, "Applicant’s Name"),
+
+                    Text("Date of Application: $formattedDate"),
+
                     DropdownButtonFormField<String>(
-                      value: selectedLeaveType,
-                      decoration: const InputDecoration(
-                        labelText: 'Leave Type',
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                      ),
-                      items: leaveTypes.map((type) {
-                        return DropdownMenuItem<String>(
-                          value: type,
-                          child: Text(type),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          selectedLeaveType = value;
-                        });
-                      },
+                      value: selectedSubject,
+                      decoration: const InputDecoration(labelText: 'Subject'),
+                      items: subjectOptions.map((s) =>
+                          DropdownMenuItem(value: s, child: Text(s))).toList(),
+                      onChanged: (val) => setState(() => selectedSubject = val),
                     ),
 
-                    const SizedBox(height: 16),
-
-                    /// Reason Field
-                    TextField(
-                      controller: reasonController,
+                    DropdownButtonFormField<String>(
+                      value: selectedReason,
                       decoration: const InputDecoration(
-                        labelText: 'Reason',
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                      ),
+                          labelText: 'Reason for Leave'),
+                      items: reasonOptions.map((r) =>
+                          DropdownMenuItem(value: r, child: Text(r))).toList(),
+                      onChanged: (val) => setState(() => selectedReason = val),
                     ),
 
-                    const SizedBox(height: 16),
-
-                    /// From Date
+                    const SizedBox(height: 12),
                     Row(
                       children: [
-                        Expanded(
-                          child: Text(fromDate == null
-                              ? 'From Date'
-                              : 'From: ${fromDate!.toIso8601String().split('T')[0]}'),
-                        ),
+                        Expanded(child: Text(
+                            fromDate == null ? 'Start Date' : 'From: ${fromDate!
+                                .toIso8601String().split("T")[0]}')),
                         ElevatedButton(
-                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.brandColor),
                           onPressed: () async {
                             final picked = await showDatePicker(
                               context: context,
                               initialDate: DateTime.now(),
                               firstDate: DateTime.now(),
-                              lastDate: DateTime.now().add(const Duration(days: 365)),
+                              lastDate: DateTime.now().add(
+                                  const Duration(days: 365)),
                             );
-                            if (picked != null) {
-                              setState(() => fromDate = picked);
-                            }
+                            if (picked != null) setState(() =>
+                            fromDate = picked);
                           },
-                          child: const Text('Pick From'),
+                          child: const Text('Pick Start'),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 12),
-
-                    /// To Date
+                    const SizedBox(height: 8),
                     Row(
                       children: [
-                        Expanded(
-                          child: Text(toDate == null
-                              ? 'To Date'
-                              : 'To: ${toDate!.toIso8601String().split('T')[0]}'),
-                        ),
+                        Expanded(child: Text(
+                            toDate == null ? 'End Date' : 'To: ${toDate!
+                                .toIso8601String().split("T")[0]}')),
                         ElevatedButton(
-                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.brandColor),
                           onPressed: () async {
                             final picked = await showDatePicker(
                               context: context,
                               initialDate: fromDate ?? DateTime.now(),
                               firstDate: fromDate ?? DateTime.now(),
-                              lastDate: DateTime.now().add(const Duration(days: 365)),
+                              lastDate: DateTime.now().add(
+                                  const Duration(days: 365)),
                             );
-                            if (picked != null) {
-                              setState(() => toDate = picked);
-                            }
+                            if (picked != null) setState(() => toDate = picked);
                           },
-                          child: const Text('Pick To'),
+                          child: const Text('Pick End'),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 8),
+                    if (fromDate != null && toDate != null)
+                      Text("Number of Days: ${toDate!.difference(fromDate!)
+                          .inDays + 1}"),
 
-                    /// Submit Button
+                    _buildTextField(whatsAppController, "WhatsApp Contact"),
+                    _buildTextField(
+                        emergencyContactController, "Emergency Contact"),
+
+                    CheckboxListTile(
+                      title: const Text("No Substitute Staff (N/A)"),
+                      value: noSubstitute,
+                      onChanged: (val) =>
+                          setState(() =>
+                          noSubstitute = val ?? true),
+                    ),
+
+                    if (!noSubstitute) ...[
+                      _buildTextField(
+                          substituteNameController, "Substitute Name"),
+                      _buildTextField(
+                          substituteContactController, "Substitute Contact"),
+                    ],
+
+                    const SizedBox(height: 16),
+                    const Text("Request for Approval:",
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text(
+                      "I humbly request your kind approval for this leave application. "
+                          "If required, I can provide additional information or documentation.",
+                      style: TextStyle(fontSize: 14),
+                    ),
+
+                    const SizedBox(height: 12),
+                    const Text("Declaration:",
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text(
+                      "I understand that my leave is subject to the terms and conditions "
+                          "of my employment contract and the Consulate’s leave policy.",
+                      style: TextStyle(fontSize: 14),
+                    ),
+
+                    _buildTextField(signatureController, "Signature"),
+                    // _buildTextField(nameController, "Name"),
+                    _buildTextField(designationController, "Designation"),
+                    _buildTextField(wingController, "Wing"),
+
+                    const SizedBox(height: 20),
                     ElevatedButton(
+                
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.brandColor,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
+                          backgroundColor: AppColors.brandColor),
                       onPressed: () async {
-                        if (selectedLeaveType == null ||
-                            reasonController.text.isEmpty ||
+                        if (selectedSubject == null ||
+                            selectedReason == null ||
                             fromDate == null ||
-                            toDate == null) {
+                            toDate == null ||
+                            nameController.text.isEmpty ||
+                            signatureController.text.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('All fields are required')),
+                            const SnackBar(content: Text(
+                                'Please fill all required fields')),
                           );
                           return;
                         }
 
-                        try {
-                          await LeaveService().applyLeave(email, {
-                            'name': employeeName,
-                            'type': selectedLeaveType,
-                            'reason': reasonController.text.trim(),
-                            'fromDate': fromDate!.toIso8601String(),
-                            'toDate': toDate!.toIso8601String(),
-                          });
+                        final payload = {
+                          "name": nameController.text.trim(),
+                          "email": email,
+                          "type": selectedSubject,
+                          "reason": selectedReason,
+                          "fromDate": fromDate!.toIso8601String(),
+                          "toDate": toDate!.toIso8601String(),
+                          "noOfDays": toDate!.difference(fromDate!).inDays + 1,
+                          "whatsapp": whatsAppController.text.trim(),
+                          "emergencyContact": emergencyContactController.text
+                              .trim(),
+                          "substituteName": noSubstitute
+                              ? "N/A"
+                              : substituteNameController.text.trim(),
+                          "substituteContact": noSubstitute
+                              ? "N/A"
+                              : substituteContactController.text.trim(),
+                          "signature": signatureController.text.trim(),
+                          "designation": designationController.text.trim(),
+                          "wing": wingController.text.trim(),
+                        };
 
+                        try {
+                          await LeaveService().applyLeave(email, payload);
                           if (mounted) {
                             Navigator.pop(context);
-                            await _loadLeaves(); // Refresh list
+                            await _loadLeaves();
                           }
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error: $e')),
-                          );
+                              SnackBar(content: Text('Error: $e')));
                         }
-                      },
-                      child: const Text('Submit Leave Request'),
-                    ),
+                      }, child: Text('Submit LeaveRequest'),
+                    )
                   ],
                 ),
               );
@@ -463,4 +528,18 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
     );
   }
 
+  Widget _buildTextField(TextEditingController controller, String label) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+          contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12, vertical: 14),
+        ),
+      ),
+    );
+  }
 }

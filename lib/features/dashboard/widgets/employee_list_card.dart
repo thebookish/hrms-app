@@ -29,8 +29,8 @@ class EmployeeListCard extends ConsumerWidget {
                   child: CircleAvatar(
                     backgroundColor: AppColors.brandColor,
                     child: Text(
-                      (e.fullName != null && e.fullName!.isNotEmpty)
-                          ? e.fullName![0].toUpperCase()
+                      (e.firstName != null && e.firstName!.isNotEmpty)
+                          ? e.firstName![0].toUpperCase()
                           : '?',
                       style: const TextStyle(color: AppColors.white),
                     ),

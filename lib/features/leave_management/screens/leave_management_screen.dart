@@ -130,7 +130,7 @@ class _AdminLeaveManagementScreenState
                   future: _getEmployeeByEmail(leave.email),
                   builder: (_, snapshot) {
                     final employee = snapshot.data;
-                    final employeeId = employee?.id ?? 'Loading...';
+                    // final employeeId = employee?.id ?? 'Loading...';
 
                     return Card(
                       color: AppColors.white,
@@ -163,7 +163,7 @@ class _AdminLeaveManagementScreenState
                                 children: [
                                   const SizedBox(height: 4),
                                   Text('Name: ${leave.name}'),
-                                  Text('Employee ID: $employeeId'),
+                                  // Text('Employee ID: $employeeId'),
                                   Text('Email: ${leave.email}'),
                                   Text('Duration: ${leave.fromDate} → ${leave.toDate}'),
                                   Text('Reason: ${leave.reason}'),
