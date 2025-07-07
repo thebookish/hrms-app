@@ -60,7 +60,7 @@ class _JobInfoScreenState extends ConsumerState<JobInfoScreen> {
         isLoading = false;
       });
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error loading job info: $e')));
+          .showSnackBar(SnackBar(content: Text('Error loading job info')));
     }
   }
 
@@ -73,7 +73,7 @@ class _JobInfoScreenState extends ConsumerState<JobInfoScreen> {
       await _loadJobInfo();
     } catch (e) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Toggle failed: $e')));
+          .showSnackBar(SnackBar(content: Text('Toggle failed')));
     }
   }
 
@@ -84,7 +84,7 @@ class _JobInfoScreenState extends ConsumerState<JobInfoScreen> {
       await _loadJobInfo();
     } catch (e) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Update failed: $e')));
+          .showSnackBar(SnackBar(content: Text('Update failed')));
     }
   }
 

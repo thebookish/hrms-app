@@ -47,7 +47,7 @@ class _ApprovedEmployeeListScreenState extends ConsumerState<ApprovedEmployeeLis
           Expanded(
             child: asyncEmployees.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
+              error: (e, _) => Center(child: Text('Something Went Wrong!')),
               data: (employees) {
                 final filtered = employees.where((e) {
                   final name = (e.firstName ?? '').toLowerCase();

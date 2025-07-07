@@ -70,7 +70,7 @@ class _HRNotificationScreenState extends ConsumerState<HRNotificationScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error sending notifications: $e')),
+        SnackBar(content: Text('Error sending notifications')),
       );
     } finally {
       if (mounted) setState(() => _isSending = false);
@@ -90,7 +90,7 @@ class _HRNotificationScreenState extends ConsumerState<HRNotificationScreen> {
         padding: const EdgeInsets.all(16),
         child: employeesAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Error: $e')),
+          error: (e, _) => Center(child: Text('Something Went Wrong!')),
           data: (employees) {
             final emails = employees.map((e) => e.email ?? '').where((e) => e.isNotEmpty).toList();
 

@@ -44,7 +44,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Reset failed: $e')),
+        SnackBar(content: Text('Reset failed')),
       );
     } finally {
       setState(() => _isLoading = false);

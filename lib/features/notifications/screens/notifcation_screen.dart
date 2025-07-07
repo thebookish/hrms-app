@@ -23,33 +23,24 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   Widget build(BuildContext context) {
     final user = ref.watch(loggedInUserProvider);
     final notificationsAsync = ref.watch(notificationsProvider);
-    final themeMode = ref.read(themeModeProvider.notifier).state;
+    final themeMode = ref.watch(themeModeProvider); // ✅ Make reactive
+
+    final isDark = themeMode == ThemeMode.dark;
 
     return Scaffold(
-      // appBar: AppBar(
-      //   title: const Text('Notifications', style: TextStyle(fontWeight: FontWeight.bold)),
-      //   backgroundColor: Colors.white,
-      //   foregroundColor: Colors.black,
-      //   elevation: 0,
-      // ),
       body: Column(
         children: [
-          // SwitchListTile(
-          //   title: const Text('Push notifications', style: TextStyle(fontWeight: FontWeight.w500)),
-          //   value: pushEnabled,
-          //   onChanged: (val) => setState(() => pushEnabled = val),
-          //   activeColor: AppColors.brandColor,
-          //   contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-          // ),
-          _buildTabBar(),
+          _buildTabBar(isDark),
           Expanded(
             child: notificationsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, _) => Center(child: Text('Error: $err')),
+              error: (err, _) => Center(child: Text('Something Went Wrong!')),
               data: (notifications) {
                 final filtered = filter == 'All'
                     ? notifications
-                    : notifications.where((n) => filter == 'Unread' ? !n.isRead : n.isRead).toList();
+                    : notifications
+                    .where((n) => filter == 'Unread' ? !n.isRead : n.isRead)
+                    .toList();
 
                 if (filtered.isEmpty) {
                   return const Center(child: Text('No notifications.'));
@@ -57,23 +48,31 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
 
                 return ListView.builder(
                   itemCount: filtered.length,
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                  itemBuilder: (_, index) => _buildNotificationCard(filtered[index],themeMode),
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                  itemBuilder: (_, index) =>
+                      _buildNotificationCard(filtered[index], isDark),
                 );
               },
             ),
           ),
           const SizedBox(height: 8),
           TextButton(
-            onPressed: () {
-             NotificationService().markAllAsRead(user!.email);
-             ref.invalidate(notificationsProvider);
+            onPressed: () async {
+              if (user == null) return;
+
+              await NotificationService().markAllAsRead(user.email);
+              ref.invalidate(notificationsProvider);
             },
+
             style: TextButton.styleFrom(
-              foregroundColor: themeMode==ThemeMode.dark?Colors.white:AppColors.brandColor,
-              side: BorderSide(color: themeMode==ThemeMode.dark?Colors.white:AppColors.brandColor,),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              foregroundColor: isDark ? Colors.white : AppColors.brandColor,
+              side: BorderSide(
+                  color: isDark ? Colors.white : AppColors.brandColor),
+              padding:
+              const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
             ),
             child: const Text("Mark all read"),
           ),
@@ -83,13 +82,14 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     );
   }
 
-  Widget _buildTabBar() {
+  Widget _buildTabBar(bool isDark) {
     final tabs = ['All', 'Unread', 'Read'];
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.grey.shade200,
+        color: isDark ? Colors.white10 : Colors.grey.shade200,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -102,7 +102,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: selected ? Colors.white : Colors.transparent,
+                  color: selected
+                      ? (isDark ? Colors.white12 : Colors.white)
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 alignment: Alignment.center,
@@ -110,7 +112,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                   tab,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: selected ? Colors.black : Colors.grey,
+                    color: selected
+                        ? (isDark ? Colors.white : Colors.black)
+                        : Colors.grey,
                   ),
                 ),
               ),
@@ -121,10 +125,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     );
   }
 
-  Widget _buildNotificationCard(NotificationItem item,themeMode) {
+  Widget _buildNotificationCard(NotificationItem item, bool isDark) {
     return Card(
-      color: themeMode==ThemeMode.dark?Colors.white12:AppColors.white,
-      // color: !item.isRead?AppColors.white:AppColors.grey.withOpacity(0.5),
+      color: isDark ? Colors.white12 : AppColors.white,
       elevation: 3,
       shape: RoundedRectangleBorder(
         side: BorderSide(color: AppColors.brandColor.withOpacity(0.2)),
@@ -135,15 +138,23 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.circle, size: 10, color: item.isRead ? Colors.transparent : Colors.blue),
+            Icon(Icons.circle,
+                size: 10,
+                color: item.isRead ? Colors.transparent : Colors.blue),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(item.title,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text(item.message, style: TextStyle(fontSize: 13, color: themeMode==ThemeMode.dark?Colors.white:Colors.black87,)),
+                  Text(
+                    item.message,
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: isDark ? Colors.white : Colors.black87),
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     DateFormat.yMMMd().add_jm().format(item.date),

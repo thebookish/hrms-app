@@ -30,7 +30,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
   @override
   Widget build(BuildContext context) {
     final employeeAsync = ref.watch(employeeDataProvider);
-    final themeMode = ref.read(themeModeProvider.notifier).state;
+    final themeMode = ref.watch(themeModeProvider); // ✅ WATCH for reactivity
 
     return employeeAsync.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
@@ -59,84 +59,84 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
       ),
 
       data: (employee) => Scaffold(
-        backgroundColor: themeMode==ThemeMode.dark?Colors.black45:Color(0xFFF7F8FA),
-
+        backgroundColor: themeMode == ThemeMode.dark ? Colors.black : const Color(0xFFF7F8FA),
         appBar: AppBar(
           backgroundColor: AppColors.brandColor,
           elevation: 0,
-          title: const Text('Dashboard',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          title: const Text('Dashboard', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           centerTitle: true,
-          // actions: const [
-          //   Icon(Icons.notifications_none, color: Colors.white),
-          //   SizedBox(width: 16),
-          // ],
           leading: const Padding(
             padding: EdgeInsets.only(left: 16),
             child: Icon(Icons.dashboard_customize_outlined, color: Colors.white),
           ),
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: IndexedStack(
-            index: _selectedIndex,
-            children: [
-              // Index 0 — Dashboard cards
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: GridView.count(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      children: [
-                        _DashboardCard(
-                            title: 'My Profile',
-                            icon: Icons.person_outline,
-                            color: Colors.indigo,
-                            status: employee.status ?? '',
-                        themeMode: themeMode,),
-                        _DashboardCard(
-                            title: 'Job Info',
-                            icon: Icons.work_outline,
-                            color: Colors.deepPurple,
-                            status: employee.status ?? '',
-                          themeMode: themeMode,),
-                        _DashboardCard(
-                            title: 'Leave Management',
-                            icon: Icons.beach_access,
-                            color: Colors.teal,
-                            status: employee.status ?? '',
-                          themeMode: themeMode,),
-                        _DashboardCard(
-                            title: 'Salary & Bank Info',
-                            icon: Icons.account_balance_wallet_outlined,
-                            color: Colors.green,
-                            status: employee.status ?? '',
-                          themeMode: themeMode,),
-                        _DashboardCard(
-                            title: 'Family Members',
-                            icon: Icons.family_restroom,
-                            color: Colors.orange,
-                            status: employee.status ?? '',
-                          themeMode: themeMode,),
-                        _DashboardCard(
-                            title: 'Sponsor Details',
-                            icon: Icons.handshake_outlined,
-                            color: Colors.blueGrey,
-                            status: employee.status ?? '',
-                          themeMode: themeMode,),
-                      ],
+        body: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(employeeDataProvider);
+            await Future.delayed(const Duration(milliseconds: 300));
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: IndexedStack(
+              index: _selectedIndex,
+              children: [
+                // Index 0 — Dashboard cards
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: GridView.count(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        children: [
+                          _DashboardCard(
+                              title: 'My Profile',
+                              icon: Icons.person_outline,
+                              color: Colors.indigo,
+                              status: employee.status ?? '',
+                              themeMode: themeMode),
+                          _DashboardCard(
+                              title: 'Job Info',
+                              icon: Icons.work_outline,
+                              color: Colors.deepPurple,
+                              status: employee.status ?? '',
+                              themeMode: themeMode),
+                          _DashboardCard(
+                              title: 'Leave Management',
+                              icon: Icons.beach_access,
+                              color: Colors.teal,
+                              status: employee.status ?? '',
+                              themeMode: themeMode),
+                          _DashboardCard(
+                              title: 'Salary & Bank Info',
+                              icon: Icons.account_balance_wallet_outlined,
+                              color: Colors.green,
+                              status: employee.status ?? '',
+                              themeMode: themeMode),
+                          _DashboardCard(
+                              title: 'Family Members',
+                              icon: Icons.family_restroom,
+                              color: Colors.orange,
+                              status: employee.status ?? '',
+                              themeMode: themeMode),
+                          _DashboardCard(
+                              title: 'Sponsor Details',
+                              icon: Icons.handshake_outlined,
+                              color: Colors.blueGrey,
+                              status: employee.status ?? '',
+                              themeMode: themeMode),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
 
-              // Index 1 — Notifications
-              const NotificationScreen()
-            ],
+                // Index 1 — Notifications
+                const NotificationScreen(),
+              ],
+            ),
           ),
         ),
         floatingActionButton: FloatingActionButton(
@@ -192,12 +192,11 @@ class _DashboardCard extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.status,
-    required this.themeMode
+    required this.themeMode,
   });
 
   @override
   Widget build(BuildContext context) {
-
     final isRestricted =
         title != 'My Profile' && title != 'Settings' && status.toLowerCase() != 'approved';
 
@@ -228,18 +227,13 @@ class _DashboardCard extends StatelessWidget {
             } else if (title == 'Family Members') {
               Navigator.push(context, MaterialPageRoute(builder: (_) => const FamilyMembersScreen()));
             } else if (title == 'Sponsor Details') {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => EmployeeSponsorViewScreen()
-                ),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (_) => EmployeeSponsorViewScreen()));
             }
           },
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              color: themeMode==ThemeMode.dark?Colors.white12:AppColors.white,
+              color: themeMode == ThemeMode.dark ? Colors.white12 : AppColors.white,
               boxShadow: const [
                 BoxShadow(
                   color: Colors.black12,

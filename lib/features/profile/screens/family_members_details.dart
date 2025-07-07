@@ -103,7 +103,7 @@ class _FamilyMembersScreenState extends ConsumerState<FamilyMembersScreen> {
                     await _loadFamilyMembers();
                   } catch (e) {
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Something Went Wrong!')));
                   }
                 },
                 icon: const Icon(Icons.save),

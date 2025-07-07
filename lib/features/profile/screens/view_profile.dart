@@ -31,7 +31,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         onRefresh: _refresh,
         child: employeeAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, _) => Center(child: Text('Error: $err')),
+          error: (err, _) => Center(child: Text('Something Went Wrong!')),
           data: (employee) => ListView(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
             children: [

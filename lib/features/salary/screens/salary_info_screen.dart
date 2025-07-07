@@ -55,7 +55,7 @@ class _SalaryInfoScreenState extends ConsumerState<SalaryInfoScreen> {
 
     if (error != null) {
       return Scaffold(
-        body: Center(child: Text('Error: $error')),
+        body: Center(child: Text('Something Went Wrong!')),
       );
     }
 

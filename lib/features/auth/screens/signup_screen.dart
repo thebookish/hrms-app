@@ -36,10 +36,8 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // ✅ Send OTP only, do NOT call signup yet
       await _authService.sendOtp(email: _emailController.text.trim());
 
-      // ✅ Navigate to VerifyOtpScreen with all user info
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -52,21 +50,25 @@ class _SignupScreenState extends State<SignupScreen> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error sending OTP: $e')),
+        const SnackBar(content: Text('Error sending OTP')),
       );
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
-
-  InputDecoration _inputDecoration({required String label, required IconData icon}) {
+  InputDecoration _inputDecoration({
+    required String label,
+    required IconData icon,
+    bool isDark = false,
+  }) {
     return InputDecoration(
       labelText: label,
-      prefixIcon: Icon(icon),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12),),
+      prefixIcon: Icon(icon, color: isDark ? Colors.white70 : Colors.grey[700]),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: isDark ? Colors.white12 : Colors.white,
+      labelStyle: TextStyle(color: isDark ? Colors.white70 : null),
     );
   }
 
@@ -82,8 +84,12 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final hintColor = isDark ? Colors.white54 : Colors.grey;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -92,38 +98,47 @@ class _SignupScreenState extends State<SignupScreen> {
               key: _formKey,
               child: Column(
                 children: [
-                  // Optional header image/illustration
-                  // Image.asset('assets/images/signup_illustration.png', height: 150),
-
                   const SizedBox(height: 24),
                   Text(
                     'Create Account',
-                    style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: AppColors.brandColor),
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.brandColor,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Sign up to get started!',
-                    style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                    style: theme.textTheme.bodyMedium?.copyWith(color: hintColor),
                   ),
-
                   const SizedBox(height: 32),
 
                   // Full Name
                   TextFormField(
                     controller: _nameController,
-                    decoration: _inputDecoration(label: 'Full Name', icon: Icons.person),
-                    validator: (value) =>
-                    value == null || value.trim().isEmpty ? 'Enter your name' : null,
+                    decoration: _inputDecoration(label: 'Full Name', icon: Icons.person, isDark: isDark),
+                    style: TextStyle(color: textColor),
+                    validator: (value) {
+                      final nameRegExp = RegExp(r"^[a-zA-Z\s]{2,}$");
+                      if (value == null || value.trim().isEmpty) return 'Enter your name';
+                      if (!nameRegExp.hasMatch(value)) return 'Name must contain only letters and spaces';
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
 
                   // Email
                   TextFormField(
                     controller: _emailController,
-                    decoration: _inputDecoration(label: 'Email', icon: Icons.email,),
                     keyboardType: TextInputType.emailAddress,
-                    validator: (value) =>
-                    value != null && value.contains('@') ? null : 'Enter a valid email',
+                    decoration: _inputDecoration(label: 'Email', icon: Icons.email, isDark: isDark),
+                    style: TextStyle(color: textColor),
+                    validator: (value) {
+                      final emailRegExp = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
+                      if (value == null || value.isEmpty) return 'Enter your email';
+                      if (!emailRegExp.hasMatch(value)) return 'Enter a valid email address';
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
 
@@ -131,23 +146,21 @@ class _SignupScreenState extends State<SignupScreen> {
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
-                    decoration: _inputDecoration(
-                      label: 'Password',
-                      icon: Icons.lock,
-                    ).copyWith(
+                    decoration: _inputDecoration(label: 'Password', icon: Icons.lock, isDark: isDark).copyWith(
                       suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
+                        icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: hintColor),
+                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                       ),
                     ),
-                    validator: (value) =>
-                    value != null && value.length >= 6 ? null : 'Minimum 6 characters',
+                    style: TextStyle(color: textColor),
+                    validator: (value) {
+                      final passwordRegExp = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$%^&*]).{6,}$');
+                      if (value == null || value.isEmpty) return 'Enter your password';
+                      if (!passwordRegExp.hasMatch(value)) {
+                        return 'Password must contain:\n• Upper & lowercase letters\n• A number & special character\n• Min 6 characters';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
 
@@ -155,21 +168,13 @@ class _SignupScreenState extends State<SignupScreen> {
                   TextFormField(
                     controller: _confirmPasswordController,
                     obscureText: _obscurePassword,
-                    decoration: _inputDecoration(
-                      label: 'Confirm Password',
-                      icon: Icons.lock_outline,
-                    ).copyWith(
+                    decoration: _inputDecoration(label: 'Confirm Password', icon: Icons.lock_outline, isDark: isDark).copyWith(
                       suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
+                        icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: hintColor),
+                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                       ),
                     ),
+                    style: TextStyle(color: textColor),
                     validator: (value) {
                       if (value == null || value.isEmpty) return 'Confirm your password';
                       if (value != _passwordController.text) return 'Passwords do not match';
@@ -178,7 +183,8 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
 
                   const SizedBox(height: 10),
-               // Terms & Conditions Checkbox
+
+                  // Terms & Conditions Checkbox
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -186,19 +192,16 @@ class _SignupScreenState extends State<SignupScreen> {
                         activeColor: AppColors.brandColor,
                         value: _agreedToTerms,
                         onChanged: (value) {
-                          setState(() {
-                            _agreedToTerms = value ?? false;
-                          });
+                          setState(() => _agreedToTerms = value ?? false);
                         },
                       ),
                       Expanded(
                         child: GestureDetector(
                           onTap: () {
-                            // Replace with actual terms screen or link
                             showDialog(
                               context: context,
                               builder: (_) => AlertDialog(
-                                title: const Text('Terms & Conditions', style: TextStyle(color: AppColors.brandColor),),
+                                title: const Text('Terms & Conditions', style: TextStyle(color: AppColors.brandColor)),
                                 content: const Text('Put your Terms & Conditions here.'),
                                 actions: [
                                   TextButton(
@@ -209,15 +212,14 @@ class _SignupScreenState extends State<SignupScreen> {
                               ),
                             );
                           },
-                          child: const Text.rich(
+                          child: Text.rich(
                             TextSpan(
                               text: 'I\'ve read and agree to the ',
-                              children: [
+                              style: TextStyle(color: hintColor),
+                              children: const [
                                 TextSpan(
                                   text: 'Terms & Conditions',
-                                  style: TextStyle(
-                                    color: AppColors.brandColor,
-                                  ),
+                                  style: TextStyle(color: AppColors.brandColor),
                                 ),
                               ],
                             ),
@@ -236,10 +238,8 @@ class _SignupScreenState extends State<SignupScreen> {
                         : ElevatedButton(
                       onPressed: _register,
                       style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
                         backgroundColor: AppColors.brandColor,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       child: const Text('Register', style: TextStyle(fontSize: 16, color: Colors.white)),
                     ),
@@ -251,10 +251,10 @@ class _SignupScreenState extends State<SignupScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Already have an account?"),
+                      Text("Already have an account?", style: TextStyle(color: textColor)),
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('Login', style: TextStyle(color: AppColors.brandColor),),
+                        child: const Text('Login', style: TextStyle(color: AppColors.brandColor)),
                       ),
                     ],
                   ),

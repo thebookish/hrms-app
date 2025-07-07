@@ -40,7 +40,7 @@ class _AddSponsorInfoScreenState extends State<AddSponsorInfoScreen> {
       _address.text = sponsor.address;
       _logoUrl.text = sponsor.logoUrl;
     } catch (e) {
-      debugPrint('No sponsor data found or error: $e');
+      debugPrint('No sponsor data found or error');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -77,7 +77,7 @@ class _AddSponsorInfoScreenState extends State<AddSponsorInfoScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving sponsor info: $e')),
+        SnackBar(content: Text('Error saving sponsor info')),
       );
     } finally {
       setState(() => _isSubmitting = false);

@@ -21,8 +21,6 @@ class _VerifyEmployeeScreenState extends State<VerifyEmployeeScreen> {
     "firstName": TextEditingController(),
     "surname": TextEditingController(),
     "dob": TextEditingController(),
-    "gender": TextEditingController(),
-    "maritalStatus": TextEditingController(),
     "presentAddress": TextEditingController(),
     "permanentAddress": TextEditingController(),
     "passportNo": TextEditingController(),
@@ -33,7 +31,6 @@ class _VerifyEmployeeScreenState extends State<VerifyEmployeeScreen> {
     "passportExpiry": TextEditingController(),
     "visaNo": TextEditingController(),
     "visaExpiry": TextEditingController(),
-    "visaType": TextEditingController(),
     "sponsor": TextEditingController(),
     "position": TextEditingController(),
     "wing": TextEditingController(),
@@ -61,6 +58,10 @@ class _VerifyEmployeeScreenState extends State<VerifyEmployeeScreen> {
     "children": TextEditingController(),
   };
 
+  String gender = 'Male';
+  String maritalStatus = 'Single';
+  String visaType = 'Employment';
+
   List<Map<String, TextEditingController>> childrenControllers = [];
 
   File? photoFile, passportFile, eidFile, visaFile, cvFile, certFile, refFile;
@@ -68,7 +69,7 @@ class _VerifyEmployeeScreenState extends State<VerifyEmployeeScreen> {
   @override
   void initState() {
     super.initState();
-    _addChild(); // One child entry by default
+    _addChild(); // Start with one child entry
   }
 
   void _addChild() {
@@ -112,7 +113,8 @@ class _VerifyEmployeeScreenState extends State<VerifyEmployeeScreen> {
     }
   }
 
-  Widget _buildField(String label, TextEditingController controller, {bool date = false}) {
+  Widget _buildField(String label, TextEditingController controller,
+      {bool date = false, bool required = true}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
@@ -124,37 +126,74 @@ class _VerifyEmployeeScreenState extends State<VerifyEmployeeScreen> {
           border: const OutlineInputBorder(),
           suffixIcon: date ? const Icon(Icons.calendar_today) : null,
         ),
-        validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+        validator: (value) =>
+        required && (value == null || value.trim().isEmpty) ? 'Required' : null,
       ),
     );
   }
 
-  Widget _buildFileUpload(String label, File? file, VoidCallback onPick) {
+  Widget _buildDropdown(String label, List<String> items, String value, void Function(String?) onChanged) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          ElevatedButton.icon(
-            icon: const Icon(Icons.upload_file),
-            label: Text(label),
-            onPressed: onPick,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(file != null ? file.path.split('/').last : 'No file chosen',
-                overflow: TextOverflow.ellipsis),
-          ),
-        ],
+      child: DropdownButtonFormField<String>(
+        value: value,
+        items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+        onChanged: onChanged,
+        decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
       ),
     );
   }
+
+  Widget _buildDocumentUploadSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 24),
+        const Text(
+          "📎 Document Uploads",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.brandColor),
+        ),
+        const SizedBox(height: 12),
+        _styledUploadTile("Photo", photoFile, () => _pickFile('photo'), required: true),
+        _styledUploadTile("Passport", passportFile, () => _pickFile('passport'), required: true),
+        _styledUploadTile("EID", eidFile, () => _pickFile('eid'), required: true),
+        _styledUploadTile("Visa", visaFile, () => _pickFile('visa'), required: true),
+        _styledUploadTile("CV", cvFile, () => _pickFile('cv'), required: true),
+        _styledUploadTile("Certificates", certFile, () => _pickFile('cert')),
+        _styledUploadTile("Reference Letter", refFile, () => _pickFile('ref')),
+      ],
+    );
+  }
+
+  Widget _styledUploadTile(String label, File? file, VoidCallback onPick, {bool required = false}) {
+    final fileName = file != null ? file.path.split('/').last : 'No file selected';
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        leading: Icon(
+          required ? Icons.check_circle_outline : Icons.insert_drive_file_outlined,
+          color: required ? Colors.green : Colors.grey,
+        ),
+        title: Text(label),
+        subtitle: Text(fileName, overflow: TextOverflow.ellipsis),
+        trailing: IconButton(
+          icon: const Icon(Icons.upload_file, color: AppColors.brandColor),
+          onPressed: onPick,
+        ),
+      ),
+    );
+  }
+
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
     if ([photoFile, passportFile, eidFile, visaFile, cvFile].any((f) => f == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Upload all required documents")),
+        const SnackBar(content: Text("Please upload all required documents.")),
       );
       return;
     }
@@ -169,6 +208,10 @@ class _VerifyEmployeeScreenState extends State<VerifyEmployeeScreen> {
     controllers.forEach((key, controller) {
       request.fields[key] = controller.text.trim();
     });
+
+    request.fields['gender'] = gender;
+    request.fields['maritalStatus'] = maritalStatus;
+    request.fields['visaType'] = visaType;
 
     for (int i = 0; i < childrenControllers.length; i++) {
       childrenControllers[i].forEach((key, ctrl) {
@@ -193,8 +236,7 @@ class _VerifyEmployeeScreenState extends State<VerifyEmployeeScreen> {
     }
 
     try {
-      final streamed = await request.send();
-      final response = await http.Response.fromStream(streamed);
+      final response = await http.Response.fromStream(await request.send());
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Submitted Successfully")));
@@ -204,10 +246,23 @@ class _VerifyEmployeeScreenState extends State<VerifyEmployeeScreen> {
         throw Exception('Submission failed');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
     } finally {
       setState(() => _isSubmitting = false);
     }
+  }
+
+  Widget _buildSection(String title, List<Widget> children) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 24),
+        Text(title,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.brandColor)),
+        const SizedBox(height: 8),
+        ...children,
+      ],
+    );
   }
 
   @override
@@ -230,109 +285,91 @@ class _VerifyEmployeeScreenState extends State<VerifyEmployeeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSection("Personal Details", [
+              _buildSection("Personal Info", [
                 _buildField("First Name", controllers["firstName"]!),
                 _buildField("Surname", controllers["surname"]!),
                 _buildField("Date of Birth", controllers["dob"]!, date: true),
-                _buildField("Gender", controllers["gender"]!),
-                _buildField("Marital Status", controllers["maritalStatus"]!),
+                _buildDropdown("Gender", ['Male', 'Female', 'Other'], gender, (val) => setState(() => gender = val!)),
+                _buildDropdown("Marital Status", ['Single', 'Married', 'Divorced'], maritalStatus, (val) => setState(() => maritalStatus = val!)),
                 _buildField("Present Address", controllers["presentAddress"]!),
                 _buildField("Permanent Address", controllers["permanentAddress"]!),
                 _buildField("Passport No.", controllers["passportNo"]!),
-                _buildField("Emirate ID No.", controllers["emirateIdNo"]!),
-                _buildField("EID Issue Date", controllers["eidIssue"]!, date: true),
-                _buildField("EID Expiry Date", controllers["eidExpiry"]!, date: true),
-                _buildField("Passport Issue Date", controllers["passportIssue"]!, date: true),
-                _buildField("Passport Expiry Date", controllers["passportExpiry"]!, date: true),
+                _buildField("Emirate ID", controllers["emirateIdNo"]!),
+                _buildField("EID Issue", controllers["eidIssue"]!, date: true),
+                _buildField("EID Expiry", controllers["eidExpiry"]!, date: true),
+                _buildField("Passport Issue", controllers["passportIssue"]!, date: true),
+                _buildField("Passport Expiry", controllers["passportExpiry"]!, date: true),
                 _buildField("Visa No.", controllers["visaNo"]!),
-                _buildField("Visa Expiry Date", controllers["visaExpiry"]!, date: true),
-                _buildField("Visa Type", controllers["visaType"]!),
+                _buildField("Visa Expiry", controllers["visaExpiry"]!, date: true),
+                _buildDropdown("Visa Type", ['Employment', 'Tourist', 'Resident'], visaType, (val) => setState(() => visaType = val!)),
                 _buildField("Sponsor", controllers["sponsor"]!),
               ]),
-              _buildSection("Job Detail", [
-                _buildField("Position/Role", controllers["position"]!),
+              _buildSection("Job Info", [
+                _buildField("Position", controllers["position"]!),
                 _buildField("Wing", controllers["wing"]!),
                 _buildField("Home/Local", controllers["homeLocal"]!),
-                _buildField("Date of Joining", controllers["joinDate"]!, date: true),
-                _buildField("Date of Retirement", controllers["retireDate"]!, date: true),
+                _buildField("Joining Date", controllers["joinDate"]!, date: true),
+                _buildField("Retire Date", controllers["retireDate"]!, date: true),
               ]),
-              _buildSection("Contact Detail", [
+              _buildSection("Contact Info", [
                 _buildField("Land Phone", controllers["landPhone"]!),
                 _buildField("Mobile", controllers["mobile"]!),
-                _buildField("Email Address", controllers["email"]!),
-                _buildField("Alternative Mobile", controllers["altMobile"]!),
-                _buildField("Botim", controllers["botim"]!),
-                _buildField("WhatsApp", controllers["whatsapp"]!),
-                _buildField("Emergency Contact", controllers["emergency"]!),
+                _buildField("Email", controllers["email"]!),
+                _buildField("Alternative Mobile", controllers["altMobile"]!, required: false),
+                _buildField("Botim", controllers["botim"]!, required: false),
+                _buildField("WhatsApp", controllers["whatsapp"]!, required: false),
+                _buildField("Emergency", controllers["emergency"]!),
               ]),
-              _buildSection("Salary Account Detail", [
+              _buildSection("Bank Info", [
                 _buildField("Bank Name", controllers["bank"]!),
                 _buildField("Account No.", controllers["accountNo"]!),
-                _buildField("Account Holder's Name", controllers["accountName"]!),
-                _buildField("IBAN No.", controllers["iban"]!),
+                _buildField("Account Holder", controllers["accountName"]!),
+                _buildField("IBAN", controllers["iban"]!),
               ]),
               _buildSection("Emergency Contact", [
                 _buildField("Name", controllers["emergencyName"]!),
-                _buildField("Relationship", controllers["emergencyRelation"]!),
+                _buildField("Relation", controllers["emergencyRelation"]!),
                 _buildField("Phone", controllers["emergencyPhone"]!),
                 _buildField("Email", controllers["emergencyEmail"]!),
-                _buildField("WhatsApp", controllers["emergencyWhatsapp"]!),
-                _buildField("Botim", controllers["emergencyBotim"]!),
+                _buildField("WhatsApp", controllers["emergencyWhatsapp"]!, required: false),
+                _buildField("Botim", controllers["emergencyBotim"]!, required: false),
               ]),
-              _buildSection("Family", [
-                _buildField("Spouse Name", controllers["spouseName"]!),
-                _buildField("No. of Children", controllers["children"]!),
+              _buildSection("Family Info", [
+                _buildField("Spouse Name", controllers["spouseName"]!, required: false),
+                _buildField("No. of Children", controllers["children"]!, required: false),
               ]),
               for (int i = 0; i < childrenControllers.length; i++)
                 _buildSection("Child ${i + 1}", [
-                  _buildField("Name", childrenControllers[i]["name"]!),
-                  _buildField("Gender", childrenControllers[i]["gender"]!),
-                  _buildField("Date of Birth", childrenControllers[i]["dob"]!, date: true),
-                  _buildField("Schooling Year", childrenControllers[i]["schoolingYear"]!),
-                  _buildField("School", childrenControllers[i]["school"]!),
+                  _buildField("Name", childrenControllers[i]["name"]!, required: false),
+                  _buildField("Gender", childrenControllers[i]["gender"]!, required: false),
+                  _buildField("DOB", childrenControllers[i]["dob"]!, date: true, required: false),
+                  _buildField("Schooling Year", childrenControllers[i]["schoolingYear"]!, required: false),
+                  _buildField("School", childrenControllers[i]["school"]!, required: false),
                 ]),
               TextButton.icon(
                 onPressed: _addChild,
                 icon: const Icon(Icons.add),
                 label: const Text("Add Child"),
               ),
-              _buildSection("Document Uploads", [
-                _buildFileUpload("Photo", photoFile, () => _pickFile('photo')),
-                _buildFileUpload("Passport", passportFile, () => _pickFile('passport')),
-                _buildFileUpload("Emirate ID", eidFile, () => _pickFile('eid')),
-                _buildFileUpload("Visa", visaFile, () => _pickFile('visa')),
-                _buildFileUpload("CV", cvFile, () => _pickFile('cv')),
-                _buildFileUpload("Academic Certificates", certFile, () => _pickFile('cert')),
-                _buildFileUpload("Reference Letter", refFile, () => _pickFile('ref')),
-              ]),
+              _buildDocumentUploadSection(),
+              // _buildSection("Documents", _buildDocumentUploadSection() as List<Widget>),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _isSubmitting ? null : _submitForm,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.brandColor,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submitForm,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.brandColor,
+                    padding: const EdgeInsets.all(16),
+                  ),
+                  child: _isSubmitting
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text("Submit"),
                 ),
-                child: _isSubmitting
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("Submit"),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildSection(String title, List<Widget> children) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 24),
-        Text(title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.brandColor)),
-        const SizedBox(height: 8),
-        ...children,
-      ],
     );
   }
 }

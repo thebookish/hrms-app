@@ -52,7 +52,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
         Navigator.popUntil(context, (route) => route.isFirst); // Go to login
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Something Went Wrong!')));
     } finally {
       setState(() => _isVerifying = false);
     }

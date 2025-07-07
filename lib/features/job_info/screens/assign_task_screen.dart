@@ -44,7 +44,7 @@ class _AssignTaskScreenState extends State<AssignTaskScreen> {
         receiverEmail: receiverEmail,
       );
     } catch (e) {
-      debugPrint('Failed to send notification: $e');
+      debugPrint('Failed to send notification');
     }
   }
   Future<void> _loadTasks() async {
@@ -107,7 +107,7 @@ class _AssignTaskScreenState extends State<AssignTaskScreen> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(content: Text('Something Went Wrong!')),
       );
     }
   }

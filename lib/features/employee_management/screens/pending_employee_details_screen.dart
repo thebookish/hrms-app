@@ -65,7 +65,7 @@ class PendingEmployeeDetailsScreen extends ConsumerWidget {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Download failed: $e')),
+        SnackBar(content: Text('Download failed!')),
       );
     }
   }
@@ -261,7 +261,7 @@ class PendingEmployeeDetailsScreen extends ConsumerWidget {
 
   Widget _wrapFileTile(BuildContext context, String label, String? filePath) {
     final url = filePath != null && filePath.isNotEmpty
-        ? 'http://10.0.2.2:5000$filePath'
+        ? 'https://backend-hrm-cwbfc6cwbwbbdhae.southeastasia-01.azurewebsites.net$filePath'
         : null;
 
     if (url == null) {

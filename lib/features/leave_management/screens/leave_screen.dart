@@ -66,7 +66,7 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
           ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : _error != null
           ? Center(
-          child: Text('Error: $_error',
+          child: Text('Something Went Wrong!',
               style: const TextStyle(color: Colors.white)))
           : employeeAsync.when(
         loading: () =>
@@ -74,7 +74,7 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
             child: CircularProgressIndicator(color: Colors.white)),
         error: (err, _) =>
             Center(
-                child: Text('Error: $err',
+                child: Text('Something Went Wrong!',
                     style: const TextStyle(color: Colors.white))),
         data: (employee) {
           final sick = employee.sickLeave ?? 0;
@@ -514,7 +514,7 @@ class _LeaveScreenState extends ConsumerState<LeaveScreen>
                           }
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error: $e')));
+                              SnackBar(content: Text('Something Went Wrong!')));
                         }
                       }, child: Text('Submit LeaveRequest'),
                     )

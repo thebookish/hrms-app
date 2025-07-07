@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -26,7 +25,6 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  // final _storage = const FlutterSecureStorage();
   bool _obscurePassword = true;
   bool _isLoading = false;
 
@@ -55,17 +53,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       if (user != null) {
         ref.read(loggedInUserProvider.notifier).state = user;
-          // Save user info or token securely
-          await SecureStorageService().write('userEmail', user.email);
-          await SecureStorageService().write('userRole',  user.role);
-          await SecureStorageService().write('userName', user.name);
-          // or if you have an auth token:
-          // await _storage.write(key: 'authToken', value: token);
-        // ✅ Get Player ID from OneSignal
+
+        await SecureStorageService().write('userEmail', user.email);
+        await SecureStorageService().write('userRole', user.role);
+        await SecureStorageService().write('userName', user.name);
+
         final playerId = await OneSignal.User.getOnesignalId();
 
-
-        // ✅ Send to backend
         if (playerId != null && user.email != null) {
           final url = Uri.parse('${ApiEndpoints.baseUrl}/notifications/player-id');
           await http.post(
@@ -75,33 +69,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           );
         }
 
-        // ✅ Check user role
-        if (user.role.toLowerCase() == 'admin') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) =>  AdminDashboard()), // ⬅️ Replace with your admin dashboard
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const EmployeeDashboard()),
-          );
-        }
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>
+            user.role.toLowerCase() == 'admin' ? const AdminDashboard() : const EmployeeDashboard(),
+          ),
+        );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login error: $e')),
+        const SnackBar(content: Text('Login failed!')),
       );
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color background = isDark ? Colors.black : AppColors.brandColor;
+    final Color cardColor = isDark ? Colors.grey.shade900 : Colors.white;
+    final Color textColor = isDark ? Colors.white : Colors.black87;
+    final Color hintColor = isDark ? Colors.white60 : Colors.grey;
+
     return Scaffold(
-      backgroundColor: AppColors.brandColor,
+      backgroundColor: background,
       body: Stack(
         children: [
           Positioned(
@@ -111,101 +105,105 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             bottom: 0,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(60)),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(60)),
               ),
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height - 280,
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Center(
-                        child: Text(
-                          'Login',
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                        ),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    const Center(
+                      child: Text(
+                        'Login',
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                       ),
-                      const SizedBox(height: 30),
-                      const Text('Email', style: TextStyle(fontWeight: FontWeight.w500)),
-                      TextField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
-                          hintText: 'Enter your email',
-                          border: UnderlineInputBorder(),
-                        ),
+                    ),
+                    const SizedBox(height: 30),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('Email', style: TextStyle(fontWeight: FontWeight.w500, color: textColor)),
+                    ),
+                    TextField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      style: TextStyle(color: textColor),
+                      decoration: InputDecoration(
+                        hintText: 'Enter your email',
+                        hintStyle: TextStyle(color: hintColor),
+                        border: const UnderlineInputBorder(),
                       ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Password', style: TextStyle(fontWeight: FontWeight.w500)),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
-                              );
-                            },
-                            child: const Text('Forgot?', style: TextStyle(color: Colors.grey)),
-                          ),
-                        ],
-                      ),
-                      TextField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        decoration: InputDecoration(
-                          hintText: 'Enter your password',
-                          border: const UnderlineInputBorder(),
-                          suffixIcon: IconButton(
-                            icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                            onPressed: _togglePasswordVisibility,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 30),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : () => _login(context),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.brandColor,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          ),
-                          child: _isLoading
-                              ? const CircularProgressIndicator(color: Colors.white)
-                              : const Text('Log In', style: TextStyle(color: Colors.white)),
-                        ),
-                      ),
-                      const SizedBox(height: 30),
-                      Center(
-                        child: GestureDetector(
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Password', style: TextStyle(fontWeight: FontWeight.w500, color: textColor)),
+                        GestureDetector(
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => const SignupScreen()),
+                              MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
                             );
                           },
-                          child: RichText(
-                            text: const TextSpan(
-                              text: "Don't have an account? ",
-                              style: TextStyle(color: Colors.black87),
-                              children: [
-                                TextSpan(
-                                  text: 'Create now',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
+                          child: Text('Forgot?', style: TextStyle(color: hintColor)),
+                        ),
+                      ],
+                    ),
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      style: TextStyle(color: textColor),
+                      decoration: InputDecoration(
+                        hintText: 'Enter your password',
+                        hintStyle: TextStyle(color: hintColor),
+                        border: const UnderlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            color: hintColor,
                           ),
+                          onPressed: _togglePasswordVisibility,
                         ),
                       ),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 30),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : () => _login(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.brandColor,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text('Log In', style: TextStyle(color: Colors.white)),
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const SignupScreen()),
+                        );
+                      },
+                      child: RichText(
+                        text: TextSpan(
+                          text: "Don't have an account? ",
+                          style: TextStyle(color: textColor),
+                          children: const [
+                            TextSpan(
+                              text: 'Create now',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                 ),
               ),
             ),

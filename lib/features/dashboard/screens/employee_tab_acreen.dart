@@ -71,7 +71,7 @@ class _EmployeeTabScreenState extends ConsumerState<EmployeeTabScreen> {
         Expanded(
           child: employeeAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Error: $e')),
+            error: (e, _) => Center(child: Text('Something Went Wrong!')),
             data: (employees) {
               final filtered = employees.where((e) {
                 final name = "${e.firstName} ${e.surname}".toLowerCase();

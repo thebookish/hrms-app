@@ -93,7 +93,7 @@ class _AdminLeaveManagementScreenState
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(content: Text('Something Went Wrong!')),
       );
     }
   }
@@ -110,7 +110,7 @@ class _AdminLeaveManagementScreenState
       ),
       body: leaveAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text('Something Went Wrong!')),
         data: (leaves) {
           if (leaves.isEmpty) {
             return const Center(child: Text('No leave requests found.'));

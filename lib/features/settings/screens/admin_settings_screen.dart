@@ -21,18 +21,18 @@ class AdminSettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text('App Preferences', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          ListTile(
-            title: const Text('Dark Mode'),
-            trailing: Switch(
-              value: themeMode == ThemeMode.dark,
-              onChanged: (val) {
-                ref.read(themeModeProvider.notifier).state =
-                val ? ThemeMode.dark : ThemeMode.light;
-              },
-            ),
-          ),
-          const Divider(height: 32),
+          // const Text('App Preferences', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          // ListTile(
+          //   title: const Text('Dark Mode'),
+          //   trailing: Switch(
+          //     value: themeMode == ThemeMode.dark,
+          //     onChanged: (val) {
+          //       ref.read(themeModeProvider.notifier).state =
+          //       val ? ThemeMode.dark : ThemeMode.light;
+          //     },
+          //   ),
+          // ),
+          // const Divider(height: 32),
           const Text('Account', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
 
           ListTile(

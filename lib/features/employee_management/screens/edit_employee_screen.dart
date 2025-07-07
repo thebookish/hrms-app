@@ -155,7 +155,7 @@ class _EditEmployeeScreenState extends ConsumerState<EditEmployeeScreen>
       }
     } catch (e) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Failed: $e")));
+          .showSnackBar(SnackBar(content: Text("Update Failed")));
     }
   }
 

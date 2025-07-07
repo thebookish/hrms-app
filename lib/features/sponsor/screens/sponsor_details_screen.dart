@@ -55,7 +55,7 @@ class _EmployeeSponsorViewScreenState
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : error != null
-          ? Center(child: Text('Error: $error'))
+          ? Center(child: Text('Something Went Wrong!'))
           : sponsor == null
           ? const Center(child: Text('No sponsor data found.'))
           : SingleChildScrollView(
