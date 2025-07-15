@@ -37,7 +37,7 @@ dependencies:
   fl_chart: ^0.63.0
   percent_indicator:
   file_picker:
-  charts_flutter: ^0.11.0
+#  charts_flutter:
   flutter_secure_storage:
   intl:
   http:
@@ -49,7 +49,10 @@ dependencies:
   url_launcher:
   dio:
   path_provider:
-  onesignal_flutter: ^5.1.0
+  local_auth:
+  awesome_notifications: ^0.10.1
+  flutter_local_notifications:
+
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

@@ -85,6 +85,7 @@ class _AdminLeaveManagementScreenState
         title: 'Leave ${action == 'approved' ? 'Approved' : 'Rejected'}',
         message: 'Your ${type.toLowerCase()} has been ${action.toLowerCase()} by HR.',
         receiverEmail: email,
+
       );
 
       ref.invalidate(leaveRequestsProvider);

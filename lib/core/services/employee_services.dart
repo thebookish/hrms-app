@@ -16,6 +16,7 @@ class EmployeeService {
     if (response.statusCode == 200) {
       return EmployeeModel.fromJson(jsonDecode(response.body));
     } else {
+      print("response: "+response.body);
       throw Exception('Failed to load employee data');
     }
   }

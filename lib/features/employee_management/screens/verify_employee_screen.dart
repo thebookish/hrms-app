@@ -167,6 +167,7 @@ class _VerifyEmployeeScreenState extends State<VerifyEmployeeScreen> {
 
   Widget _styledUploadTile(String label, File? file, VoidCallback onPick, {bool required = false}) {
     final fileName = file != null ? file.path.split('/').last : 'No file selected';
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -174,18 +175,23 @@ class _VerifyEmployeeScreenState extends State<VerifyEmployeeScreen> {
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         leading: Icon(
-          required ? Icons.check_circle_outline : Icons.insert_drive_file_outlined,
-          color: required ? Colors.green : Colors.grey,
+          file != null
+              ? Icons.check_circle_rounded
+              : (required ? Icons.radio_button_unchecked : Icons.insert_drive_file_outlined),
+          color: file != null ? Colors.green : (required ? Colors.orange : Colors.grey),
+          size: 28,
         ),
-        title: Text(label),
+        title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(fileName, overflow: TextOverflow.ellipsis),
         trailing: IconButton(
           icon: const Icon(Icons.upload_file, color: AppColors.brandColor),
           onPressed: onPick,
+          tooltip: "Upload $label",
         ),
       ),
     );
   }
+
 
 
   Future<void> _submitForm() async {

@@ -1,22 +1,41 @@
+import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hrms_app/core/theme/dark_theme.dart';
 import 'package:hrms_app/core/theme/light_theme.dart';
 import 'package:hrms_app/features/settings/providers/theme_provider.dart';
 import 'package:hrms_app/splash_screen.dart';
-import 'package:onesignal_flutter/onesignal_flutter.dart';
-import 'features/auth/screens/login_screen.dart';
-// import 'features/dashboard/screens/admin_dashboard.dart';
-// import 'features/dashboard/screens/employee_dashboard.dart';
+
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // ✅ Must initialize before any OneSignal methods
-  OneSignal.initialize('6020aad9-e6e5-45bd-b600-64deaeb81b69');
-
-  // (Optional) Ask for push permission on iOS
-  OneSignal.Notifications.requestPermission(true);
+  await Firebase.initializeApp(
+    options: const FirebaseOptions(
+      apiKey: "AIzaSyDrVAQxb3I9MrGMGt2CMwwW1iajnSK8f6Y",
+      appId: "1:753255455615:android:aeb4ab75e8544f3bdc184a",
+      messagingSenderId: "753255455615",
+      projectId: "hrms-eaea9",
+      storageBucket: "hrms-eaea9.firebasestorage.app",
+    ),
+  );
+  AwesomeNotifications().initialize(
+    null,
+    [
+      NotificationChannel(
+        channelKey: 'basic_channel',
+        channelName: 'Basic Notifications',
+        channelDescription: 'Notification channel for basic tests',
+        defaultColor: Colors.teal,
+        ledColor: Colors.white,
+      ),
+    ],
+    debug: true,
+  );
   final container = ProviderContainer();
+
+  // ✅ Pass container as ref to the controller
+
 
   await loadSavedThemeMode(container);
 

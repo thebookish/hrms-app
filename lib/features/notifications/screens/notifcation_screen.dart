@@ -1,12 +1,13 @@
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hrms_app/core/constants/app_colors.dart';
 import 'package:hrms_app/core/services/notification_service.dart';
 import 'package:hrms_app/features/auth/controllers/user_provider.dart';
 import 'package:hrms_app/features/notifications/controllers/notification_provider.dart';
+import 'package:hrms_app/features/notifications/model/notification_model.dart';
 import 'package:hrms_app/features/settings/providers/theme_provider.dart';
 import 'package:intl/intl.dart';
-import 'package:hrms_app/core/constants/app_colors.dart';
-import 'package:hrms_app/features/notifications/model/notification_model.dart';
 
 class NotificationScreen extends ConsumerStatefulWidget {
   const NotificationScreen({super.key});
@@ -16,15 +17,38 @@ class NotificationScreen extends ConsumerStatefulWidget {
 }
 
 class _NotificationScreenState extends ConsumerState<NotificationScreen> {
-  bool pushEnabled = true;
   String filter = 'All';
+
+  @override
+  void initState() {
+    super.initState();
+    _requestNotificationPermission();
+  }
+
+  Future<void> _requestNotificationPermission() async {
+    final isAllowed = await AwesomeNotifications().isNotificationAllowed();
+    if (!isAllowed) {
+      await AwesomeNotifications().requestPermissionToSendNotifications();
+    }
+  }
+
+  void _showAwesomeNotification(NotificationItem item) {
+    AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
+        channelKey: 'basic_channel',
+        title: item.title,
+        body: item.message,
+        notificationLayout: NotificationLayout.Default,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(loggedInUserProvider);
     final notificationsAsync = ref.watch(notificationsProvider);
-    final themeMode = ref.watch(themeModeProvider); // ✅ Make reactive
-
+    final themeMode = ref.watch(themeModeProvider); // reactive
     final isDark = themeMode == ThemeMode.dark;
 
     return Scaffold(
@@ -38,9 +62,13 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
               data: (notifications) {
                 final filtered = filter == 'All'
                     ? notifications
-                    : notifications
-                    .where((n) => filter == 'Unread' ? !n.isRead : n.isRead)
-                    .toList();
+                    : notifications.where((n) => filter == 'Unread' ? !n.isRead : n.isRead).toList();
+
+                // ✅ Show latest unread as awesome notification (once)
+                if (notifications.any((n) => !n.isRead)) {
+                  final latestUnread = notifications.firstWhere((n) => !n.isRead);
+                  _showAwesomeNotification(latestUnread);
+                }
 
                 if (filtered.isEmpty) {
                   return const Center(child: Text('No notifications.'));
@@ -48,8 +76,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
 
                 return ListView.builder(
                   itemCount: filtered.length,
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
                   itemBuilder: (_, index) =>
                       _buildNotificationCard(filtered[index], isDark),
                 );
@@ -64,15 +91,11 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
               await NotificationService().markAllAsRead(user.email);
               ref.invalidate(notificationsProvider);
             },
-
             style: TextButton.styleFrom(
               foregroundColor: isDark ? Colors.white : AppColors.brandColor,
-              side: BorderSide(
-                  color: isDark ? Colors.white : AppColors.brandColor),
-              padding:
-              const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
+              side: BorderSide(color: isDark ? Colors.white : AppColors.brandColor),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             child: const Text("Mark all read"),
           ),
@@ -138,23 +161,16 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.circle,
-                size: 10,
-                color: item.isRead ? Colors.transparent : Colors.blue),
+            Icon(Icons.circle, size: 10, color: item.isRead ? Colors.transparent : Colors.blue),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item.title,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text(
-                    item.message,
-                    style: TextStyle(
-                        fontSize: 13,
-                        color: isDark ? Colors.white : Colors.black87),
-                  ),
+                  Text(item.message,
+                      style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black87)),
                   const SizedBox(height: 4),
                   Text(
                     DateFormat.yMMMd().add_jm().format(item.date),

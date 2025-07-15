@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hrms_app/core/constants/app_colors.dart';
+import 'package:hrms_app/features/auth/controllers/user_provider.dart';
 import 'package:hrms_app/features/dashboard/controllers/employee_dashboard_controlller.dart';
 import 'package:hrms_app/features/job_info/screens/job_info_screen.dart';
 import 'package:hrms_app/features/leave_management/screens/leave_screen.dart';
+import 'package:hrms_app/features/notifications/controllers/notification_controller.dart';
 import 'package:hrms_app/features/notifications/screens/notifcation_screen.dart';
 import 'package:hrms_app/features/profile/screens/approved_employee_for_family.dart';
 import 'package:hrms_app/features/profile/screens/family_members_details.dart';
@@ -26,7 +28,18 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
   void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);
   }
+  @override
+  void initState() {
+    super.initState();
 
+    Future.microtask(() {
+      final user = ref.read(loggedInUserProvider);
+      final email = user?.email ?? '';
+      if (email.isNotEmpty) {
+        FirebaseNotificationController.initialize(email);
+      }
+    });
+  }
   @override
   Widget build(BuildContext context) {
     final employeeAsync = ref.watch(employeeDataProvider);

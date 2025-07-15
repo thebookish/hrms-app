@@ -9,7 +9,6 @@ import 'package:hrms_app/features/auth/controllers/user_provider.dart';
 import 'package:hrms_app/features/auth/screens/forgot_password_screen.dart';
 import 'package:hrms_app/features/dashboard/screens/admin_dashboard.dart';
 import 'package:hrms_app/features/dashboard/screens/employee_dashboard.dart';
-import 'package:onesignal_flutter/onesignal_flutter.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/models/user_model.dart';
 import 'signup_screen.dart';
@@ -58,16 +57,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         await SecureStorageService().write('userRole', user.role);
         await SecureStorageService().write('userName', user.name);
 
-        final playerId = await OneSignal.User.getOnesignalId();
 
-        if (playerId != null && user.email != null) {
-          final url = Uri.parse('${ApiEndpoints.baseUrl}/notifications/player-id');
-          await http.post(
-            url,
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'email': user.email, 'playerId': playerId}),
-          );
-        }
 
         Navigator.pushReplacement(
           context,

@@ -7,7 +7,8 @@ class EmployeeModel {
   final String joinDate;
   final String profilePic;
   final String status;
-  final List<String> notifications;
+  // final List<String> notifications;
+  final fcmToken;
 
   EmployeeModel({
     required this.name,
@@ -18,7 +19,8 @@ class EmployeeModel {
     required this.joinDate,
     required this.profilePic,
     required this.status,
-    required this.notifications,
+    // required this.notifications,
+    required this.fcmToken
   });
 
   factory EmployeeModel.fromJson(Map<String, dynamic> json) {
@@ -31,7 +33,8 @@ class EmployeeModel {
       joinDate: json['joinDate'] ?? '',
       profilePic: json['profilePic'] ?? '',
       status: json['status']??'',
-      notifications: List<String>.from(json['notifications'] ?? []),
+      fcmToken: json['fcmToken']
+      // notifications: List<String>.from(json['notifications'] ?? []),
     );
   }
 }

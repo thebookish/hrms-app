@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:http/http.dart' as http;
 import 'package:hrms_app/core/constants/api_endpoints.dart';
 import 'package:hrms_app/features/notifications/model/notification_model.dart';
@@ -35,7 +36,7 @@ class NotificationService {
     required String message,
     required String receiverEmail,
   }) async {
-    // 1. Send to in-app backend
+    // 1. Send to backend for in-app storage
     final url = Uri.parse('${ApiEndpoints.baseUrl}/notifications/send');
     final response = await http.post(
       url,
@@ -51,41 +52,8 @@ class NotificationService {
       throw Exception('Failed to send in-app notification');
     }
 
-    // // 2. Get OneSignal Player ID of receiver from backend
-    // final playerIdRes = await http.get(Uri.parse('${ApiEndpoints.baseUrl}/users/player-id?email=$receiverEmail'));
-    //
-    // if (playerIdRes.statusCode == 200) {
-    //   final playerId = jsonDecode(playerIdRes.body)['playerId'];
-    //   if (playerId != null) {
-    //     await _sendPushNotification(playerId, title, message);
-    //   }
-    // } else {
-    //   print('Failed to fetch player ID: ${playerIdRes.body}');
-    // }
-  }
 
-  // /// OneSignal Push Notification
-  // Future<void> _sendPushNotification(String playerId, String title, String message) async {
-  //   final pushUrl = Uri.parse('https://onesignal.com/api/v1/notifications');
-  //
-  //   final res = await http.post(
-  //     pushUrl,
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //       'Authorization': 'Basic $_oneSignalRestKey',
-  //     },
-  //     body: jsonEncode({
-  //       'app_id': _oneSignalAppId,
-  //       'include_player_ids': [playerId],
-  //       'headings': {'en': title},
-  //       'contents': {'en': message},
-  //     }),
-  //   );
-  //
-  //   if (res.statusCode != 200 && res.statusCode != 201) {
-  //     throw Exception('Failed to send push notification: ${res.body}');
-  //   }
-  // }
+  }
 
   Future<void> markAllAsRead(String email) async {
     final url = Uri.parse('${ApiEndpoints.baseUrl}/notifications/mark-all-read?email=$email');

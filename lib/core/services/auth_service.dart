@@ -44,7 +44,7 @@ class AuthService {
 
       return UserModel.fromJson(data['user']);
     } else {
-      print("respo: "+response.statusCode.toString());
+      print("respo: "+ response.body);
       throw Exception('Login failed: ${response.body}');
     }
   }
